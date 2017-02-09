@@ -1,15 +1,15 @@
-# Popular Movies Stage 1
+# Popular Movies Stage 2
 
-This is the first project of the Udacity Android Developer Fast Track course (https://www.udacity.com/course/associate-android-developer-fast-track--nd818)
+This is the second project of the Udacity Android Developer Fast Track course (https://www.udacity.com/course/associate-android-developer-fast-track--nd818)
 
-The purpose of this application is to apply the lessons learned during the first module of the course, developing an application that shows popular movies on a phone or tablet using the Movie Database APIs (https://www.themoviedb.org/documentation/api)
+The purpose of this application is to apply the lessons learned during the second module of the course, developing an application that shows popular movies on a phone or tablet using the Movie Database APIs (https://www.themoviedb.org/documentation/api) and implementing new features like Content Providers, Data Persistence and multiple Layouts
 
 ## Installing
 
 Clone the repository with the command line:
 
 ```
-$ git clone https://github.com/gianpierobozza/popular-movies-stage1-udacity
+$ git clone https://github.com/gianpierobozza/popular-movies-stage2-udacity
 ```
 
 Then Import the project in Android Studio

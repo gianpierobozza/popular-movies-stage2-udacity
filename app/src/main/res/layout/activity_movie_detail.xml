@@ -15,9 +15,9 @@
             android:padding="10dp">
 
             <ImageView
-                android:id="@+id/iv_movie_detail_poster"
-                android:contentDescription="@string/poster_image_alt"
-                android:layout_width="wrap_content"
+                android:id="@+id/iv_movie_detail_backdrop"
+                android:contentDescription="@string/backdrop_image_alt"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
             <ProgressBar
@@ -25,29 +25,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
-                android:layout_below="@+id/iv_movie_detail_poster"
+                android:layout_below="@+id/iv_movie_detail_backdrop"
                 android:layout_centerHorizontal="true" />
 
             <TextView
                 android:id="@+id/tv_movie_detail_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toRightOf="@id/iv_movie_detail_poster"
-                android:layout_toEndOf="@id/iv_movie_detail_poster"
-                android:paddingRight="10dp"
-                android:paddingEnd="10dp"
-                android:paddingLeft="10dp"
-                android:paddingStart="10dp"
-                android:paddingTop="0dp"
-                android:paddingBottom="0dp"
+                android:layout_below="@id/iv_movie_detail_backdrop"
+                android:paddingTop="22dp"
                 android:textSize="@dimen/movie_detail_text_size" />
 
             <TextView
                 android:id="@+id/tv_movie_detail_vote_average"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/iv_movie_detail_poster"
-                android:layout_marginTop="22dp"
+                android:layout_below="@id/tv_movie_detail_title"
                 android:textSize="@dimen/movie_detail_text_size" />
 
             <TextView

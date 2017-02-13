@@ -11,6 +11,7 @@ import com.gbozza.android.popularmovies.R;
  */
 public class Movie implements Parcelable {
     private int id;
+    private String backdropPath;
     private String posterPath;
     private String overview;
     private String originalTitle;
@@ -23,15 +24,17 @@ public class Movie implements Parcelable {
      * Base constructor
      *
      * @param id the integer id of a movie
+     * @param backdropPath the string containing the path of the image used as a backdrop
      * @param posterPath the string containing the path of the image used as a poster
      * @param overview the plot of the movie
      * @param originalTitle the original title
      * @param releaseDate a string containing the release date of the movie
      * @param voteAverage a string representing the average vote for the movie
      */
-    public Movie(int id, String posterPath, String overview, String originalTitle,
+    public Movie(int id, String backdropPath, String posterPath, String overview, String originalTitle,
                  String releaseDate, String voteAverage) {
         this.id = id;
+        this.backdropPath = backdropPath;
         this.posterPath = posterPath;
         this.overview = overview;
         this.originalTitle = originalTitle;
@@ -46,11 +49,23 @@ public class Movie implements Parcelable {
      */
     private Movie(Parcel parcel) {
         id = parcel.readInt();
+        backdropPath = parcel.readString();
         posterPath = parcel.readString();
         overview = parcel.readString();
         originalTitle = parcel.readString();
         releaseDate = parcel.readString();
         voteAverage = parcel.readString();
+    }
+
+    /**
+     * This method returns the complete poster path based on screen size
+     *
+     * @param context application context
+     * @return the path used by the Picasso library to display an image
+     */
+    public String buildBackdropPath(Context context) {
+        String backdropWidth = context.getResources().getString(R.string.backdrop_size);
+        return MOVIEDB_POSTER_IMG_URL + backdropWidth + getBackdropPath();
     }
 
     /**
@@ -72,6 +87,7 @@ public class Movie implements Parcelable {
     @Override
     public void writeToParcel(Parcel parcel, int flags) {
         parcel.writeInt(id);
+        parcel.writeString(backdropPath);
         parcel.writeString(posterPath);
         parcel.writeString(overview);
         parcel.writeString(originalTitle);
@@ -102,6 +118,14 @@ public class Movie implements Parcelable {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getBackdropPath() {
+        return backdropPath;
+    }
+
+    public void setBackdropPath(String backdropPath) {
+        this.backdropPath = backdropPath;
     }
 
     public String getPosterPath() {

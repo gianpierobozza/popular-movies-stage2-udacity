@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
 import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -39,7 +40,7 @@ public class MovieDetailActivity extends AppCompatActivity {
 
                 setContentView(R.layout.activity_movie_detail);
 
-                ImageView moviePosterImageView = (ImageView) findViewById(R.id.iv_movie_detail_poster);
+                ImageView movieBackdropImageView = (ImageView) findViewById(R.id.iv_movie_detail_backdrop);
                 final ProgressBar moviePosterProgressBar = (ProgressBar) findViewById(R.id.pb_movie_detail_poster);
                 TextView movieTitleTextView = (TextView) findViewById(R.id.tv_movie_detail_title);
                 TextView movieVoteAverageTextView = (TextView) findViewById(R.id.tv_movie_detail_vote_average);
@@ -51,8 +52,8 @@ public class MovieDetailActivity extends AppCompatActivity {
 
                 Context context = getApplicationContext();
                 Picasso.with(context)
-                        .load(movie.buildPosterPath(context))
-                        .into(moviePosterImageView, new Callback() {
+                        .load(movie.buildBackdropPath(context))
+                        .into(movieBackdropImageView, new Callback() {
                             @Override
                             public void onSuccess() {
                                 moviePosterProgressBar.setVisibility(View.GONE);

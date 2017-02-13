@@ -1,18 +1,16 @@
 package com.gbozza.android.popularmovies.fragments;
 
 import android.content.Context;
-import android.content.res.Resources;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
@@ -31,7 +29,7 @@ import java.util.List;
 /**
  * A Class that extends Fragment to implement the Movie List structure
  */
-public class MovieListFragment extends Fragment {
+public class MovieListFragment extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static ProgressBar mLoadingIndicator;
     public static TextView mErrorMessageDisplay;
@@ -43,9 +41,11 @@ public class MovieListFragment extends Fragment {
     private BottomRecyclerViewScrollListener mScrollListener;
     private int mPage;
     private int mSorting;
+    private static String mMovieLocale;
 
     private static final int SORTING_POPULAR = 1;
     private static final int SORTING_RATED = 2;
+    private static final int SORTING_FAVOURITES = 3;
     private static final String BUNDLE_MOVIES_KEY = "movieList";
     private static final String BUNDLE_PAGE_KEY = "currentPage";
     private static final String BUNDLE_SORTING_KEY = "currentSorting";
@@ -56,7 +56,6 @@ public class MovieListFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
     }
 
     @Nullable
@@ -67,17 +66,17 @@ public class MovieListFragment extends Fragment {
             errorShown = savedInstanceState.getBoolean(BUNDLE_ERROR_KEY);
         }
 
+        View rootView = inflater.inflate(R.layout.movie_list_fragment, container, false);
+        mContext = getContext();
+        setupSharedPreferences();
+
         if (savedInstanceState != null && !errorShown) {
             mPage = savedInstanceState.getInt(BUNDLE_PAGE_KEY);
             mSorting = savedInstanceState.getInt(BUNDLE_SORTING_KEY);
         } else {
             mPage = 1;
-            mSorting = 1;
         }
 
-        View rootView = inflater.inflate(R.layout.movie_list_fragment, container, false);
-
-        mContext = getContext();
         final int columns = getResources().getInteger(R.integer.grid_columns);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(mContext, columns, GridLayoutManager.VERTICAL, false);
         RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.rv_posters);
@@ -137,6 +136,32 @@ public class MovieListFragment extends Fragment {
         }
     }
 
+    private void setupSharedPreferences() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+
+        String sorting = sharedPreferences.getString(getString(R.string.pref_sorting_key),
+                getResources().getString(R.string.pref_sorting_default));
+        if (sorting.equals(getString(R.string.pref_sorting_popular_value))) {
+            mSorting = SORTING_POPULAR;
+        } else if (sorting.equals(getString(R.string.pref_sorting_rated_value))) {
+            mSorting = SORTING_RATED;
+        }
+
+        mMovieLocale = sharedPreferences.getString(getString(R.string.pref_locale_key),
+                getResources().getString(R.string.pref_locale_default));
+
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        // TODO implement this?
+    }
+
+    public static String getMovieLocale() {
+        return mMovieLocale;
+    }
+
     /**
      * A method that invokes the AsyncTask to populate the RecyclerView,
      * it's based on the sorting option selected by the user. Default is "most popular"
@@ -158,9 +183,9 @@ public class MovieListFragment extends Fragment {
                     break;
             }
             String[] posters = new String[]{method, String.valueOf(mPage)};
-            new FetchFromMovieDbTask().execute(posters);
+            new FetchFromMovieDbTask(mContext).execute(posters);
         } else {
-            showErrorMessage(R.string.error_no_connectivity);
+            showErrorMessage(R.string.error_no_connectivity, mContext);
             if (mSwipeContainer.isRefreshing()) {
                 mSwipeContainer.setRefreshing(false);
             }
@@ -181,41 +206,9 @@ public class MovieListFragment extends Fragment {
      *
      * @param messageId the resource id of the error string
      */
-    public static void showErrorMessage(int messageId) {
-        mErrorMessageDisplay.setText(Resources.getSystem().getText(messageId));
+    public static void showErrorMessage(int messageId, Context context) {
+        mErrorMessageDisplay.setText(context.getText(messageId));
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.main, menu);
-        switch (mSorting) {
-            case SORTING_POPULAR:
-                menu.findItem(R.id.sort_popular).setChecked(true);
-                break;
-            case SORTING_RATED:
-                menu.findItem(R.id.sort_rated).setChecked(true);
-                break;
-            default:
-                menu.findItem(R.id.sort_popular).setChecked(true);
-                break;
-        }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.sort_popular || id == R.id.sort_rated) {
-            if (!item.isChecked()) {
-                mSorting = item.getOrder();
-                item.setChecked(true);
-                clearGridView();
-                loadCards(mSorting);
-            }
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 }

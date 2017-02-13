@@ -38,6 +38,7 @@ public final class MovieDbJsonUtilities {
         final String TMDB_RESULTS = "results";
 
         // "results" keys
+        final String TMDB_R_BACKDROP_PATH = "backdrop_path";
         final String TMDB_R_POSTER_PATH = "poster_path";
         final String TMDB_R_ID = "id";
         final String TMDB_R_OVERVIEW = "overview";
@@ -73,6 +74,7 @@ public final class MovieDbJsonUtilities {
 
         for (int i = 0; i < resultsArray.length(); i++) {
             int id;
+            String backdropPath;
             String posterPath;
             String overview;
             String originalTitle;
@@ -83,13 +85,14 @@ public final class MovieDbJsonUtilities {
             JSONObject result = resultsArray.getJSONObject(i);
 
             id = result.getInt(TMDB_R_ID);
+            backdropPath = result.getString(TMDB_R_BACKDROP_PATH);
             posterPath = result.getString(TMDB_R_POSTER_PATH);
             overview = result.getString(TMDB_R_OVERVIEW);
             originalTitle = result.getString(TMDB_R_ORIGINAL_TITLE);
             popularity = result.getString(TMDB_R_RELEASE_DATE);
             voteAverage = result.getString(TMDB_R_VOTE_AVERAGE);
 
-            Movie movie = new Movie(id, posterPath, overview, originalTitle, popularity, voteAverage);
+            Movie movie = new Movie(id, backdropPath, posterPath, overview, originalTitle, popularity, voteAverage);
             parsedMoviesData.add(movie);
         }
 

@@ -7,5 +7,6 @@
 
     <integer name="grid_columns">2</integer>
 
+    <string name="backdrop_size">w780</string>
     <string name="poster_size">w342</string>
 </resources>

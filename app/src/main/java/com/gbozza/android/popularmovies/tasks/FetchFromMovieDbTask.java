@@ -1,5 +1,6 @@
 package com.gbozza.android.popularmovies.tasks;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
@@ -23,6 +24,13 @@ import static android.content.ContentValues.TAG;
  * The background worker that executes the calls to the MovieDB service
  */
 public class FetchFromMovieDbTask extends AsyncTask<String[], Void, List<Movie>> {
+
+    private Context mContext;
+
+    public FetchFromMovieDbTask(Context context) {
+        mContext = context;
+    }
+
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
@@ -35,7 +43,7 @@ public class FetchFromMovieDbTask extends AsyncTask<String[], Void, List<Movie>>
         String page = params[0][1];
         Map<String, String> mapping = new HashMap<>();
 
-        mapping.put(NetworkUtilities.getMoviedbLanguageQueryParam(), MovieListFragment.MOVIEDB_LANGUAGE);
+        mapping.put(NetworkUtilities.getMoviedbLanguageQueryParam(), MovieListFragment.getMovieLocale());
         mapping.put(NetworkUtilities.getMoviedbPageQueryParam(), String.valueOf(page));
 
         URL url = NetworkUtilities.buildUrl(method, mapping);
@@ -59,8 +67,7 @@ public class FetchFromMovieDbTask extends AsyncTask<String[], Void, List<Movie>>
             MovieListFragment.mMoviesAdapter.setMoviesData(movieList);
             MovieListFragment.mErrorMessageDisplay.setVisibility(View.INVISIBLE);
         } else {
-
-            MovieListFragment.showErrorMessage(R.string.error_moviedb_list);
+            MovieListFragment.showErrorMessage(R.string.error_moviedb_list, mContext);
         }
         MovieListFragment.mSwipeContainer.setRefreshing(false);
     }

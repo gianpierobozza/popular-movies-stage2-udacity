@@ -19,7 +19,7 @@ import android.widget.TextView;
 import com.gbozza.android.popularmovies.R;
 import com.gbozza.android.popularmovies.adapters.MoviesAdapter;
 import com.gbozza.android.popularmovies.models.Movie;
-import com.gbozza.android.popularmovies.tasks.FetchFromMovieDbTask;
+import com.gbozza.android.popularmovies.tasks.FetchMoviesTask;
 import com.gbozza.android.popularmovies.utilities.BottomRecyclerViewScrollListener;
 import com.gbozza.android.popularmovies.utilities.NetworkUtilities;
 
@@ -31,11 +31,11 @@ import java.util.List;
  */
 public class MovieListFragment extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
+    // TODO FIX MEMORY LEAK!!!
     public static ProgressBar mLoadingIndicator;
     public static TextView mErrorMessageDisplay;
     public static SwipeRefreshLayout mSwipeContainer;
     public static MoviesAdapter mMoviesAdapter;
-    public static final String MOVIEDB_LANGUAGE = "en-US";
 
     private Context mContext;
     private BottomRecyclerViewScrollListener mScrollListener;
@@ -182,8 +182,8 @@ public class MovieListFragment extends Fragment implements SharedPreferences.OnS
                     method = NetworkUtilities.getMoviedbMethodPopular();
                     break;
             }
-            String[] posters = new String[]{method, String.valueOf(mPage)};
-            new FetchFromMovieDbTask(mContext).execute(posters);
+            String[] movies = new String[]{method, String.valueOf(mPage)};
+            new FetchMoviesTask(mContext).execute(movies);
         } else {
             showErrorMessage(R.string.error_no_connectivity, mContext);
             if (mSwipeContainer.isRefreshing()) {

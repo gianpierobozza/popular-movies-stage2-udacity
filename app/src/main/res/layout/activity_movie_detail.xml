@@ -69,6 +69,32 @@
                 android:textAlignment="center"
                 android:visibility="invisible" />
 
+            <View
+                android:id="@+id/videos_divider"
+                android:layout_below="@+id/tv_movie_detail_overview"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@android:color/black" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_videos"
+                android:layout_below="@+id/videos_divider"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <View
+                android:id="@+id/reviews_divider"
+                android:layout_below="@+id/rv_videos"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@android:color/black" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_reviews"
+                android:layout_below="@+id/reviews_divider"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
         </RelativeLayout>
 
     </ScrollView>

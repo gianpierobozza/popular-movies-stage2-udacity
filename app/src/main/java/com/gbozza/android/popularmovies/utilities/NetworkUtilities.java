@@ -27,6 +27,8 @@ public final class NetworkUtilities {
     private static final String MOVIEDB_API_URL = "https://api.themoviedb.org/3";
     private static final String MOVIEDB_METHOD_POPULAR = "/movie/popular";
     private static final String MOVIEDB_METHOD_RATED = "/movie/top_rated";
+    private static final String MOVIEDB_METHOD_VIDEOS = "/movie/#/videos";
+    private static final String MOVIEDB_METHOD_REVIEWS = "/movie/#/reviews";
 
     private static final String TAG = NetworkUtilities.class.getSimpleName();
 
@@ -132,5 +134,25 @@ public final class NetworkUtilities {
      */
     public static String getMoviedbMethodRated() {
         return MOVIEDB_METHOD_RATED;
+    }
+
+    /**
+     * Getter method to get the Videos query param value
+     *
+     * @param movieId the id of the movie.
+     * @return the Videos param value
+     */
+    public static String getMoviedbMethodVideos(int movieId) {
+        return MOVIEDB_METHOD_VIDEOS.replace("#", String.valueOf(movieId));
+    }
+
+    /**
+     * Getter method to get the Reviews query param value
+     *
+     * @param movieId the id of the movie.
+     * @return the Reviews param value
+     */
+    public static String getMoviedbMethodReviews(int movieId) {
+        return MOVIEDB_METHOD_REVIEWS.replace("#", String.valueOf(movieId));
     }
 }

@@ -18,16 +18,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static android.content.ContentValues.TAG;
-
 /**
  * The background worker that executes the calls to the MovieDB service
  */
-public class FetchFromMovieDbTask extends AsyncTask<String[], Void, List<Movie>> {
+public class FetchMoviesTask extends AsyncTask<String[], Void, List<Movie>> {
 
     private Context mContext;
+    private static final String TAG = FetchMoviesTask.class.getSimpleName();
 
-    public FetchFromMovieDbTask(Context context) {
+    public FetchMoviesTask(Context context) {
         mContext = context;
     }
 

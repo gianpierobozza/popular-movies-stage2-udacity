@@ -15,6 +15,16 @@
             android:padding="10dp">
 
             <ImageView
+                android:id="@+id/iv_movie_favourite"
+                android:contentDescription="@string/favourite_image_alt"
+                android:src="@drawable/ic_star_border_black"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="favouriteMovie" />
+
+            <ImageView
                 android:id="@+id/iv_movie_detail_backdrop"
                 android:contentDescription="@string/backdrop_image_alt"
                 android:layout_width="match_parent"

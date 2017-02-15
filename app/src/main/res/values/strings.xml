@@ -6,7 +6,10 @@
     <string name="sort_rated">Top Rated</string>
     <string name="poster_image_alt">Poster Image</string>
     <string name="backdrop_image_alt">Backdrop Image</string>
+    <string name="favourite_image_alt">Fav Star</string>
 
+    <string name="movie_favourite_on_toast_msg">Movie listed as Favourite!</string>
+    <string name="movie_favourite_off_toast_msg">Movie removed from Favourites...</string>
     <string name="movie_detail_collapse">collapse</string>
     <string name="movie_detail_see_more">see more</string>
 

@@ -1,7 +1,10 @@
 package com.gbozza.android.popularmovies;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -11,6 +14,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.gbozza.android.popularmovies.adapters.ReviewsAdapter;
 import com.gbozza.android.popularmovies.adapters.VideosAdapter;
@@ -27,6 +31,8 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gbozza.android.popularmovies.data.FavouriteMoviesContract;
+
 /**
  * Activity used to display Movie details, like release date, vote average, etc..
  */
@@ -36,6 +42,7 @@ public class MovieDetailActivity extends AppCompatActivity {
     public static ReviewsAdapter mReviewsAdapter;
 
     private Context mContext;
+    private Movie mMovie;
 
     private final static String LABEL_TEXT_VOTE_AVERAGE = "Vote Average: ";
     private final static String LABEL_TEXT_RELEASE_DATE = "Release Date: ";
@@ -64,11 +71,16 @@ public class MovieDetailActivity extends AppCompatActivity {
                 TextView movieOverviewTextView = (TextView) findViewById(R.id.tv_movie_detail_overview);
                 final TextView moviePosterErrorTextView = (TextView) findViewById(R.id.tv_movie_detail_poster_error);
 
-                Movie movie = getIntent().getExtras().getParcelable(INTENT_MOVIE_KEY);
+                mMovie = getIntent().getExtras().getParcelable(INTENT_MOVIE_KEY);
+
+                if (checkFavourite(mMovie.getId())) {
+                    ImageView movieFavouriteImageView = (ImageView) findViewById(R.id.iv_movie_favourite);
+                    movieFavouriteImageView.setBackgroundResource(R.drawable.ic_star);
+                }
 
                 Context context = getApplicationContext();
                 Picasso.with(context)
-                        .load(movie.buildBackdropPath(context))
+                        .load(mMovie.buildBackdropPath(context))
                         .into(movieBackdropImageView, new Callback() {
                             @Override
                             public void onSuccess() {
@@ -84,13 +96,13 @@ public class MovieDetailActivity extends AppCompatActivity {
                         });
 
                 movieVoteAverageTextView.append(SpannableUtilities.makeBold(LABEL_TEXT_VOTE_AVERAGE));
-                movieVoteAverageTextView.append(movie.getVoteAverage());
+                movieVoteAverageTextView.append(mMovie.getVoteAverage());
                 movieReleaseDateTextView.append(SpannableUtilities.makeBold(LABEL_TEXT_RELEASE_DATE));
-                movieReleaseDateTextView.append(movie.getReleaseDate());
+                movieReleaseDateTextView.append(mMovie.getReleaseDate());
                 movieOverviewTextView.append(SpannableUtilities.makeBold(LABEL_TEXT_OVERVIEW));
-                movieOverviewTextView.append(movie.getOverview());
+                movieOverviewTextView.append(mMovie.getOverview());
 
-                setTitle(movie.getOriginalTitle());
+                setTitle(mMovie.getOriginalTitle());
 
                 LinearLayoutManager videosLinearLayoutManager = new LinearLayoutManager(mContext);
                 RecyclerView videosRecyclerView = (RecyclerView) findViewById(R.id.rv_videos);
@@ -114,8 +126,8 @@ public class MovieDetailActivity extends AppCompatActivity {
                     ArrayList<Review> reviewList = savedInstanceState.getParcelableArrayList(BUNDLE_REVIEWS_KEY);
                     mReviewsAdapter.setReviewsData(reviewList);
                 } else {
-                    load("videos", movie.getId());
-                    load("reviews", movie.getId());
+                    load("videos", mMovie.getId());
+                    load("reviews", mMovie.getId());
                 }
             }
         }
@@ -168,6 +180,46 @@ public class MovieDetailActivity extends AppCompatActivity {
             }
         } else {
             // TODO implement error case
+        }
+    }
+
+    private boolean checkFavourite(int movieId) {
+        boolean favourite = false;
+        String[] selectionArgs = { String.valueOf(movieId) };
+        Uri uri = FavouriteMoviesContract.FavouriteMovieEntry.buildFavouriteUriWithMovieId(movieId);
+        Cursor cursor = getContentResolver().query(uri,
+                null,
+                FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_MOVIE_ID + "=?",
+                selectionArgs,
+                null);
+        if (null != cursor && cursor.getCount() != 0) {
+            favourite = true;
+            cursor.close();
+        }
+        return favourite;
+    }
+
+    public void favouriteMovie(View view) {
+        if (checkFavourite(mMovie.getId())) {
+            Uri unfavouriteUri = FavouriteMoviesContract.FavouriteMovieEntry.buildFavouriteUriWithMovieId(mMovie.getId());
+            getContentResolver().delete(unfavouriteUri, null, null);
+
+            Toast.makeText(getBaseContext(), getString(R.string.movie_favourite_off_toast_msg), Toast.LENGTH_LONG).show();
+
+            ImageView movieFavouriteImageView = (ImageView) findViewById(R.id.iv_movie_favourite);
+            movieFavouriteImageView.setBackgroundResource(R.drawable.ic_star_border_black);
+        } else {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_MOVIE_ID, mMovie.getId());
+            contentValues.put(FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_MOVIE_TITLE, mMovie.getOriginalTitle());
+            Uri favouriteUri = getContentResolver().insert(FavouriteMoviesContract.FavouriteMovieEntry.CONTENT_URI, contentValues);
+
+            if (favouriteUri != null) {
+                Toast.makeText(getBaseContext(), getString(R.string.movie_favourite_on_toast_msg), Toast.LENGTH_LONG).show();
+
+                ImageView movieFavouriteImageView = (ImageView) findViewById(R.id.iv_movie_favourite);
+                movieFavouriteImageView.setBackgroundResource(R.drawable.ic_star);
+            }
         }
     }
 

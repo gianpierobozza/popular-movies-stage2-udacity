@@ -2,13 +2,10 @@ package com.gbozza.android.popularmovies;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.SpannableString;
-import android.text.style.StyleSpan;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -23,6 +20,7 @@ import com.gbozza.android.popularmovies.models.Video;
 import com.gbozza.android.popularmovies.tasks.FetchReviewsTask;
 import com.gbozza.android.popularmovies.tasks.FetchVideosTask;
 import com.gbozza.android.popularmovies.utilities.NetworkUtilities;
+import com.gbozza.android.popularmovies.utilities.SpannableUtilities;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
@@ -39,7 +37,6 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     private Context mContext;
 
-    private final static String LABEL_TEXT_TITLE = "Title: ";
     private final static String LABEL_TEXT_VOTE_AVERAGE = "Vote Average: ";
     private final static String LABEL_TEXT_RELEASE_DATE = "Release Date: ";
     private final static String LABEL_TEXT_OVERVIEW = "Overview: ";
@@ -62,7 +59,6 @@ public class MovieDetailActivity extends AppCompatActivity {
 
                 ImageView movieBackdropImageView = (ImageView) findViewById(R.id.iv_movie_detail_backdrop);
                 final ProgressBar moviePosterProgressBar = (ProgressBar) findViewById(R.id.pb_movie_detail_poster);
-                TextView movieTitleTextView = (TextView) findViewById(R.id.tv_movie_detail_title);
                 TextView movieVoteAverageTextView = (TextView) findViewById(R.id.tv_movie_detail_vote_average);
                 TextView movieReleaseDateTextView = (TextView) findViewById(R.id.tv_movie_detail_release_date);
                 TextView movieOverviewTextView = (TextView) findViewById(R.id.tv_movie_detail_overview);
@@ -87,13 +83,11 @@ public class MovieDetailActivity extends AppCompatActivity {
                             }
                         });
 
-                movieTitleTextView.append(makeBold(LABEL_TEXT_TITLE));
-                movieTitleTextView.append(movie.getOriginalTitle());
-                movieVoteAverageTextView.append(makeBold(LABEL_TEXT_VOTE_AVERAGE));
+                movieVoteAverageTextView.append(SpannableUtilities.makeBold(LABEL_TEXT_VOTE_AVERAGE));
                 movieVoteAverageTextView.append(movie.getVoteAverage());
-                movieReleaseDateTextView.append(makeBold(LABEL_TEXT_RELEASE_DATE));
+                movieReleaseDateTextView.append(SpannableUtilities.makeBold(LABEL_TEXT_RELEASE_DATE));
                 movieReleaseDateTextView.append(movie.getReleaseDate());
-                movieOverviewTextView.append(makeBold(LABEL_TEXT_OVERVIEW));
+                movieOverviewTextView.append(SpannableUtilities.makeBold(LABEL_TEXT_OVERVIEW));
                 movieOverviewTextView.append(movie.getOverview());
 
                 setTitle(movie.getOriginalTitle());
@@ -177,17 +171,6 @@ public class MovieDetailActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     *
-     * @param string the text to be styled in bold
-     * @return the SpannabelString containing the bold text
-     */
-    private SpannableString makeBold(String string) {
-        SpannableString boldText = new SpannableString(string);
-        boldText.setSpan(new StyleSpan(Typeface.BOLD), 0, boldText.length(), 0);
-        return boldText;
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -197,4 +180,5 @@ public class MovieDetailActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
 }

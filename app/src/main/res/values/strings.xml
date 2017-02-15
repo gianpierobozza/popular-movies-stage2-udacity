@@ -7,6 +7,9 @@
     <string name="poster_image_alt">Poster Image</string>
     <string name="backdrop_image_alt">Backdrop Image</string>
 
+    <string name="movie_detail_collapse">collapse</string>
+    <string name="movie_detail_see_more">see more</string>
+
     <string name="error_message">An error has occurred. Please try again by swiping down</string>
     <string name="error_no_connectivity">Your device is not connected to the Internet, please check your connection and swipe down to refresh</string>
     <string name="error_moviedb_list">Error from the MovieDB Service. Swipe down to try again</string>

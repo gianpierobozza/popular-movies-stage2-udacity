@@ -3,7 +3,6 @@ package com.gbozza.android.popularmovies.tasks;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.view.View;
 
 import com.gbozza.android.popularmovies.MovieDetailActivity;
 import com.gbozza.android.popularmovies.fragments.MovieListFragment;
@@ -58,10 +57,10 @@ public class FetchVideosTask extends AsyncTask<String[], Void, List<Video>> {
 
     @Override
     protected void onPostExecute(List<Video> videoList) {
-        if (videoList != null) {
+        if (!(videoList.isEmpty())) {
             MovieDetailActivity.mVideosAdapter.setVideosData(videoList);
         } else {
-            //TODO implement error case
+            // TODO implement empty case, hide divider in new layout
         }
     }
 }

@@ -3,7 +3,6 @@ package com.gbozza.android.popularmovies.tasks;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.view.View;
 
 import com.gbozza.android.popularmovies.MovieDetailActivity;
 import com.gbozza.android.popularmovies.fragments.MovieListFragment;
@@ -61,7 +60,7 @@ public class FetchReviewsTask extends AsyncTask<String[], Void, List<Review>> {
         if (reviewList != null) {
             MovieDetailActivity.mReviewsAdapter.setReviewsData(reviewList);
         } else {
-            //TODO implement error case
+            // TODO implement empty case, hide divider in new layout
         }
     }
 }

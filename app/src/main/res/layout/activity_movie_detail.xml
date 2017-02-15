@@ -29,18 +29,11 @@
                 android:layout_centerHorizontal="true" />
 
             <TextView
-                android:id="@+id/tv_movie_detail_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/iv_movie_detail_backdrop"
-                android:paddingTop="22dp"
-                android:textSize="@dimen/movie_detail_text_size" />
-
-            <TextView
                 android:id="@+id/tv_movie_detail_vote_average"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/tv_movie_detail_title"
+                android:layout_below="@id/iv_movie_detail_backdrop"
+                android:paddingTop="16dp"
                 android:textSize="@dimen/movie_detail_text_size" />
 
             <TextView
@@ -73,8 +66,9 @@
                 android:id="@+id/videos_divider"
                 android:layout_below="@+id/tv_movie_detail_overview"
                 android:layout_width="match_parent"
-                android:layout_height="2dp"
-                android:background="@android:color/black" />
+                android:layout_height="1dp"
+                android:padding="16dp"
+                android:background="@android:color/darker_gray" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/rv_videos"
@@ -86,8 +80,9 @@
                 android:id="@+id/reviews_divider"
                 android:layout_below="@+id/rv_videos"
                 android:layout_width="match_parent"
-                android:layout_height="2dp"
-                android:background="@android:color/black" />
+                android:layout_height="1dp"
+                android:padding="16dp"
+                android:background="@android:color/darker_gray" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/rv_reviews"

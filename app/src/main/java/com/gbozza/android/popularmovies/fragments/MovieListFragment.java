@@ -2,9 +2,14 @@ package com.gbozza.android.popularmovies.fragments;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.GridLayoutManager;
@@ -18,6 +23,7 @@ import android.widget.TextView;
 
 import com.gbozza.android.popularmovies.R;
 import com.gbozza.android.popularmovies.adapters.MoviesAdapter;
+import com.gbozza.android.popularmovies.data.FavouriteMoviesContract;
 import com.gbozza.android.popularmovies.models.Movie;
 import com.gbozza.android.popularmovies.tasks.FetchMoviesTask;
 import com.gbozza.android.popularmovies.utilities.BottomRecyclerViewScrollListener;
@@ -29,7 +35,9 @@ import java.util.List;
 /**
  * A Class that extends Fragment to implement the Movie List structure
  */
-public class MovieListFragment extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class MovieListFragment extends Fragment implements
+        LoaderManager.LoaderCallbacks<Cursor>,
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
     // TODO FIX MEMORY LEAK!!!
     public static ProgressBar mLoadingIndicator;
@@ -37,11 +45,23 @@ public class MovieListFragment extends Fragment implements SharedPreferences.OnS
     public static SwipeRefreshLayout mSwipeContainer;
     public static MoviesAdapter mMoviesAdapter;
 
+    public static final String[] FAVOURITE_MOVIES_PROJECTION = {
+            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_MOVIE_ID,
+            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_BACKDROP_PATH,
+            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_POSTER_PATH,
+            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_OVERVIEW,
+            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_TITLE,
+            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_RELEASE_DATE,
+            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_VOTE_AVERAGE,
+    };
+
     private Context mContext;
     private BottomRecyclerViewScrollListener mScrollListener;
+    private RecyclerView mRecyclerView;
     private int mPage;
     private int mSorting;
     private static String mMovieLocale;
+    private int mPosition = RecyclerView.NO_POSITION;
 
     private static final int SORTING_POPULAR = 1;
     private static final int SORTING_RATED = 2;
@@ -50,6 +70,8 @@ public class MovieListFragment extends Fragment implements SharedPreferences.OnS
     private static final String BUNDLE_PAGE_KEY = "currentPage";
     private static final String BUNDLE_SORTING_KEY = "currentSorting";
     private static final String BUNDLE_ERROR_KEY = "errorShown";
+
+    private static final int ID_FAVOURITES_LOADER = 33;
 
     private static final String TAG = MovieListFragment.class.getSimpleName();
 
@@ -79,23 +101,25 @@ public class MovieListFragment extends Fragment implements SharedPreferences.OnS
 
         final int columns = getResources().getInteger(R.integer.grid_columns);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(mContext, columns, GridLayoutManager.VERTICAL, false);
-        RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.rv_posters);
-        recyclerView.setLayoutManager(gridLayoutManager);
+        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.rv_posters);
+        mRecyclerView.setLayoutManager(gridLayoutManager);
 
-        recyclerView.setHasFixedSize(true);
+        mRecyclerView.setHasFixedSize(true);
         mMoviesAdapter = new MoviesAdapter();
-        recyclerView.setAdapter(mMoviesAdapter);
+        mRecyclerView.setAdapter(mMoviesAdapter);
 
         mLoadingIndicator = (ProgressBar) rootView.findViewById(R.id.pb_loading_indicator);
-        mScrollListener = new BottomRecyclerViewScrollListener(gridLayoutManager, mPage) {
-            @Override
-            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                Log.d(TAG, "Loading page: " + String.valueOf(page));
-                mPage = page;
-                loadCards(mSorting);
-            }
-        };
-        recyclerView.addOnScrollListener(mScrollListener);
+        if (mSorting != SORTING_FAVOURITES) {
+            mScrollListener = new BottomRecyclerViewScrollListener(gridLayoutManager, mPage) {
+                @Override
+                public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                    Log.d(TAG, "Loading page: " + String.valueOf(page));
+                    mPage = page;
+                    loadCards();
+                }
+            };
+            mRecyclerView.addOnScrollListener(mScrollListener);
+        }
 
         mSwipeContainer = (SwipeRefreshLayout) rootView.findViewById(R.id.sr_swipe_container);
         mSwipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -103,7 +127,7 @@ public class MovieListFragment extends Fragment implements SharedPreferences.OnS
             public void onRefresh() {
                 mErrorMessageDisplay.setVisibility(View.INVISIBLE);
                 clearGridView();
-                loadCards(mSorting);
+                loadCards();
             }
         });
         mSwipeContainer.setColorSchemeResources(R.color.colorAccent);
@@ -114,7 +138,7 @@ public class MovieListFragment extends Fragment implements SharedPreferences.OnS
             ArrayList<Movie> movieList = savedInstanceState.getParcelableArrayList(BUNDLE_MOVIES_KEY);
             mMoviesAdapter.setMoviesData(movieList);
         } else {
-            loadCards(mSorting);
+            loadCards();
         }
 
         return rootView;
@@ -125,14 +149,11 @@ public class MovieListFragment extends Fragment implements SharedPreferences.OnS
         super.onSaveInstanceState(outState);
         List<Movie> movieList = mMoviesAdapter.getMoviesData();
         if (movieList != null) {
-            ArrayList<Movie> movieArrayList = new ArrayList<>(mMoviesAdapter.getMoviesData());
-            outState.putParcelableArrayList(BUNDLE_MOVIES_KEY, movieArrayList);
+            outState.putParcelableArrayList(BUNDLE_MOVIES_KEY, new ArrayList<>(movieList));
             outState.putInt(BUNDLE_PAGE_KEY, mPage);
             outState.putInt(BUNDLE_SORTING_KEY, mSorting);
-        } else {
-            if (mErrorMessageDisplay.isShown()) {
-                outState.putBoolean(BUNDLE_ERROR_KEY, true);
-            }
+        } else if (mErrorMessageDisplay.isShown()) {
+            outState.putBoolean(BUNDLE_ERROR_KEY, true);
         }
     }
 
@@ -145,6 +166,8 @@ public class MovieListFragment extends Fragment implements SharedPreferences.OnS
             mSorting = SORTING_POPULAR;
         } else if (sorting.equals(getString(R.string.pref_sorting_rated_value))) {
             mSorting = SORTING_RATED;
+        } else if (sorting.equals(getString(R.string.pref_sorting_favourites_value))) {
+            mSorting = SORTING_FAVOURITES;
         }
 
         mMovieLocale = sharedPreferences.getString(getString(R.string.pref_locale_key),
@@ -166,39 +189,85 @@ public class MovieListFragment extends Fragment implements SharedPreferences.OnS
      * A method that invokes the AsyncTask to populate the RecyclerView,
      * it's based on the sorting option selected by the user. Default is "most popular"
      *
-     * @param sorting the way of sorting selected by the user
      */
-    public void loadCards(int sorting) {
+    public void loadCards() {
+        if (mSwipeContainer.isRefreshing()) {
+            mSwipeContainer.setRefreshing(false);
+        }
         if (NetworkUtilities.isOnline(mContext)) {
-            String method;
-            switch (sorting) {
+            switch (mSorting) {
                 case SORTING_POPULAR:
-                    method = NetworkUtilities.getMoviedbMethodPopular();
+                    new FetchMoviesTask(mContext).execute(
+                            new String[]{
+                                    NetworkUtilities.getMoviedbMethodPopular(),
+                                    String.valueOf(mPage)
+                            }
+                    );
                     break;
                 case SORTING_RATED:
-                    method = NetworkUtilities.getMoviedbMethodRated();
+                    new FetchMoviesTask(mContext).execute(
+                            new String[]{
+                                    NetworkUtilities.getMoviedbMethodRated(),
+                                    String.valueOf(mPage)
+                            }
+                    );
                     break;
-                default:
-                    method = NetworkUtilities.getMoviedbMethodPopular();
+                case SORTING_FAVOURITES:
+                    LoaderManager loaderManager = getActivity().getSupportLoaderManager();
+                    if (null == loaderManager.getLoader(ID_FAVOURITES_LOADER)) {
+                        loaderManager.initLoader(ID_FAVOURITES_LOADER, null, this);
+                    } else {
+                        loaderManager.restartLoader(ID_FAVOURITES_LOADER, null, this);
+                    }
                     break;
             }
-            String[] movies = new String[]{method, String.valueOf(mPage)};
-            new FetchMoviesTask(mContext).execute(movies);
         } else {
             showErrorMessage(R.string.error_no_connectivity, mContext);
-            if (mSwipeContainer.isRefreshing()) {
-                mSwipeContainer.setRefreshing(false);
-            }
         }
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case ID_FAVOURITES_LOADER:
+                Uri favouriteMoviesUri = FavouriteMoviesContract.FavouriteMovieEntry.CONTENT_URI;
+                return new CursorLoader(mContext,
+                        favouriteMoviesUri,
+                        FAVOURITE_MOVIES_PROJECTION,
+                        null,
+                        null,
+                        null);
+            default:
+                throw new RuntimeException("Loader Not Implemented: " + id);
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mMoviesAdapter.loadCursorIntoAdapter(data);
+        if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
+        mRecyclerView.smoothScrollToPosition(mPosition);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mMoviesAdapter.loadCursorIntoAdapter(null);
     }
 
     /**
      * Reset the GridView properties and adapter
      */
     public void clearGridView() {
-        mScrollListener.resetState();
-        mPage = 1;
-        mMoviesAdapter.clear();
+        switch (mSorting) {
+            case SORTING_POPULAR:
+            case SORTING_RATED:
+                mScrollListener.resetState();
+                mPage = 1;
+                mMoviesAdapter.clearMovieList();
+                break;
+            case SORTING_FAVOURITES:
+                mMoviesAdapter.loadCursorIntoAdapter(null);
+        }
     }
 
     /**

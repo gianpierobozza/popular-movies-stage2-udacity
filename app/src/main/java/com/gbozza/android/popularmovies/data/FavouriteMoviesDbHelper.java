@@ -17,11 +17,15 @@ public class FavouriteMoviesDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Create tasks table (careful to follow SQL formatting rules)
-        final String CREATE_TABLE = "CREATE TABLE "    + FavouriteMovieEntry.TABLE_NAME + " (" +
-                FavouriteMovieEntry._ID                + " INTEGER PRIMARY KEY, " +
-                FavouriteMovieEntry.COLUMN_MOVIE_ID    + " INTEGER NOT NULL, " +
-                FavouriteMovieEntry.COLUMN_MOVIE_TITLE + " TEXT NOT NULL);";
+        final String CREATE_TABLE = "CREATE TABLE "      + FavouriteMovieEntry.TABLE_NAME + " (" +
+                FavouriteMovieEntry._ID                  + " INTEGER PRIMARY KEY, " +
+                FavouriteMovieEntry.COLUMN_MOVIE_ID      + " INTEGER NOT NULL, " +
+                FavouriteMovieEntry.COLUMN_BACKDROP_PATH + " TEXT NOT NULL, " +
+                FavouriteMovieEntry.COLUMN_POSTER_PATH   + " TEXT NOT NULL, " +
+                FavouriteMovieEntry.COLUMN_OVERVIEW      + " TEXT NOT NULL, " +
+                FavouriteMovieEntry.COLUMN_TITLE         + " TEXT NOT NULL, " +
+                FavouriteMovieEntry.COLUMN_RELEASE_DATE  + " TEXT NOT NULL, " +
+                FavouriteMovieEntry.COLUMN_VOTE_AVERAGE  + " TEXT NOT NULL);";
 
         db.execSQL(CREATE_TABLE);
     }

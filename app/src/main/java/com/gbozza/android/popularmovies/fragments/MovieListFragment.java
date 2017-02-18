@@ -1,9 +1,26 @@
 package com.gbozza.android.popularmovies.fragments;
 
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -23,14 +40,19 @@ import android.widget.TextView;
 
 import com.gbozza.android.popularmovies.R;
 import com.gbozza.android.popularmovies.adapters.MoviesAdapter;
-import com.gbozza.android.popularmovies.data.FavouriteMoviesContract;
+import com.gbozza.android.popularmovies.data.FavouriteMoviesContract.FavouriteMovieEntry;
 import com.gbozza.android.popularmovies.models.Movie;
-import com.gbozza.android.popularmovies.tasks.FetchMoviesTask;
 import com.gbozza.android.popularmovies.utilities.BottomRecyclerViewScrollListener;
+import com.gbozza.android.popularmovies.utilities.MovieDbJsonUtilities;
 import com.gbozza.android.popularmovies.utilities.NetworkUtilities;
 
+import org.json.JSONObject;
+
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A Class that extends Fragment to implement the Movie List structure
@@ -39,29 +61,18 @@ public class MovieListFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>,
         SharedPreferences.OnSharedPreferenceChangeListener {
 
-    // TODO FIX MEMORY LEAK!!!
-    public static ProgressBar mLoadingIndicator;
-    public static TextView mErrorMessageDisplay;
-    public static SwipeRefreshLayout mSwipeContainer;
-    public static MoviesAdapter mMoviesAdapter;
-
-    public static final String[] FAVOURITE_MOVIES_PROJECTION = {
-            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_MOVIE_ID,
-            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_BACKDROP_PATH,
-            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_POSTER_PATH,
-            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_OVERVIEW,
-            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_TITLE,
-            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_RELEASE_DATE,
-            FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_VOTE_AVERAGE,
-    };
-
     private Context mContext;
     private BottomRecyclerViewScrollListener mScrollListener;
     private RecyclerView mRecyclerView;
+    private ProgressBar mLoadingIndicator;
+    private TextView mErrorMessageDisplay;
+    private SwipeRefreshLayout mSwipeContainer;
     private int mPage;
     private int mSorting;
     private static String mMovieLocale;
     private int mPosition = RecyclerView.NO_POSITION;
+
+    private static MoviesAdapter mMoviesAdapter;
 
     private static final int SORTING_POPULAR = 1;
     private static final int SORTING_RATED = 2;
@@ -72,6 +83,16 @@ public class MovieListFragment extends Fragment implements
     private static final String BUNDLE_ERROR_KEY = "errorShown";
 
     private static final int ID_FAVOURITES_LOADER = 33;
+
+    public static final String[] FAVOURITE_MOVIES_PROJECTION = {
+            FavouriteMovieEntry.COLUMN_MOVIE_ID,
+            FavouriteMovieEntry.COLUMN_BACKDROP_PATH,
+            FavouriteMovieEntry.COLUMN_POSTER_PATH,
+            FavouriteMovieEntry.COLUMN_OVERVIEW,
+            FavouriteMovieEntry.COLUMN_TITLE,
+            FavouriteMovieEntry.COLUMN_RELEASE_DATE,
+            FavouriteMovieEntry.COLUMN_VOTE_AVERAGE,
+    };
 
     private static final String TAG = MovieListFragment.class.getSimpleName();
 
@@ -84,7 +105,7 @@ public class MovieListFragment extends Fragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Boolean errorShown = false;
-        if (savedInstanceState != null) {
+        if (null != savedInstanceState) {
             errorShown = savedInstanceState.getBoolean(BUNDLE_ERROR_KEY);
         }
 
@@ -92,7 +113,7 @@ public class MovieListFragment extends Fragment implements
         mContext = getContext();
         setupSharedPreferences();
 
-        if (savedInstanceState != null && !errorShown) {
+        if (null != savedInstanceState && !errorShown) {
             mPage = savedInstanceState.getInt(BUNDLE_PAGE_KEY);
             mSorting = savedInstanceState.getInt(BUNDLE_SORTING_KEY);
         } else {
@@ -134,7 +155,7 @@ public class MovieListFragment extends Fragment implements
 
         mErrorMessageDisplay = (TextView) rootView.findViewById(R.id.tv_error_message_display);
 
-        if (savedInstanceState != null && !errorShown) {
+        if (null != savedInstanceState && !errorShown) {
             ArrayList<Movie> movieList = savedInstanceState.getParcelableArrayList(BUNDLE_MOVIES_KEY);
             mMoviesAdapter.setMoviesData(movieList);
         } else {
@@ -148,7 +169,7 @@ public class MovieListFragment extends Fragment implements
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         List<Movie> movieList = mMoviesAdapter.getMoviesData();
-        if (movieList != null) {
+        if (null != movieList) {
             outState.putParcelableArrayList(BUNDLE_MOVIES_KEY, new ArrayList<>(movieList));
             outState.putInt(BUNDLE_PAGE_KEY, mPage);
             outState.putInt(BUNDLE_SORTING_KEY, mSorting);
@@ -157,6 +178,9 @@ public class MovieListFragment extends Fragment implements
         }
     }
 
+    /**
+     * This method sets different options based on the SharedPreferences of the application
+     */
     private void setupSharedPreferences() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 
@@ -178,17 +202,12 @@ public class MovieListFragment extends Fragment implements
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        // TODO implement this?
-    }
 
-    public static String getMovieLocale() {
-        return mMovieLocale;
     }
 
     /**
      * A method that invokes the AsyncTask to populate the RecyclerView,
      * it's based on the sorting option selected by the user. Default is "most popular"
-     *
      */
     public void loadCards() {
         if (mSwipeContainer.isRefreshing()) {
@@ -197,7 +216,7 @@ public class MovieListFragment extends Fragment implements
         if (NetworkUtilities.isOnline(mContext)) {
             switch (mSorting) {
                 case SORTING_POPULAR:
-                    new FetchMoviesTask(mContext).execute(
+                    new FetchMoviesTask().execute(
                             new String[]{
                                     NetworkUtilities.getMoviedbMethodPopular(),
                                     String.valueOf(mPage)
@@ -205,7 +224,7 @@ public class MovieListFragment extends Fragment implements
                     );
                     break;
                 case SORTING_RATED:
-                    new FetchMoviesTask(mContext).execute(
+                    new FetchMoviesTask().execute(
                             new String[]{
                                     NetworkUtilities.getMoviedbMethodRated(),
                                     String.valueOf(mPage)
@@ -230,7 +249,7 @@ public class MovieListFragment extends Fragment implements
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case ID_FAVOURITES_LOADER:
-                Uri favouriteMoviesUri = FavouriteMoviesContract.FavouriteMovieEntry.CONTENT_URI;
+                Uri favouriteMoviesUri = FavouriteMovieEntry.CONTENT_URI;
                 return new CursorLoader(mContext,
                         favouriteMoviesUri,
                         FAVOURITE_MOVIES_PROJECTION,
@@ -244,9 +263,13 @@ public class MovieListFragment extends Fragment implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        mMoviesAdapter.loadCursorIntoAdapter(data);
-        if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
-        mRecyclerView.smoothScrollToPosition(mPosition);
+        if (null != data && data.getCount() != 0) {
+            mMoviesAdapter.loadCursorIntoAdapter(data);
+            if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
+            mRecyclerView.smoothScrollToPosition(mPosition);
+        } else {
+            showErrorMessage(R.string.error_no_favourites, mContext);
+        }
     }
 
     @Override
@@ -275,9 +298,69 @@ public class MovieListFragment extends Fragment implements
      *
      * @param messageId the resource id of the error string
      */
-    public static void showErrorMessage(int messageId, Context context) {
+    public void showErrorMessage(int messageId, Context context) {
         mErrorMessageDisplay.setText(context.getText(messageId));
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Getter method for the Movie Locale
+     *
+     * @return a string representing the locale used to query The MovieDB service
+     */
+    public static String getMovieLocale() {
+        return mMovieLocale;
+    }
+
+    /**
+     * The background worker that executes the calls to the MovieDB service.
+     * Using an Inner class to avoid convolution when having to manipulate the
+     * View elements in the fragment.
+     */
+    public class FetchMoviesTask extends AsyncTask<String[], Void, List<Movie>> {
+
+        private final String TAG = FetchMoviesTask.class.getSimpleName();
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mLoadingIndicator.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected List<Movie> doInBackground(String[]... params) {
+            String method = params[0][0];
+            String page = params[0][1];
+            Map<String, String> mapping = new HashMap<>();
+
+            mapping.put(NetworkUtilities.getMoviedbLanguageQueryParam(), MovieListFragment.getMovieLocale());
+            mapping.put(NetworkUtilities.getMoviedbPageQueryParam(), String.valueOf(page));
+
+            URL url = NetworkUtilities.buildUrl(method, mapping);
+
+            try {
+                String response = NetworkUtilities.getResponseFromHttpUrl(url);
+                Log.d(TAG, response);
+                JSONObject responseJson = new JSONObject(response);
+
+                return MovieDbJsonUtilities.getPopularMoviesListFromJson(responseJson);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(List<Movie> movieList) {
+            mLoadingIndicator.setVisibility(View.INVISIBLE);
+            if (null != movieList) {
+                mMoviesAdapter.setMoviesData(movieList);
+                mErrorMessageDisplay.setVisibility(View.INVISIBLE);
+            } else {
+                showErrorMessage(R.string.error_moviedb_list, mContext);
+            }
+            mSwipeContainer.setRefreshing(false);
+        }
     }
 
 }

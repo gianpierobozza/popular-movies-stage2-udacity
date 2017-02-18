@@ -1,8 +1,25 @@
 package com.gbozza.android.popularmovies.adapters;
 
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -23,11 +40,12 @@ import java.util.List;
 public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdapterViewHolder> {
 
     private List<Video> mVideoList;
+    private Context mContext;
 
     /**
      * Inner class to represent the ViewHolder for the Adapter
      */
-    public class VideosAdapterViewHolder extends RecyclerView.ViewHolder {
+    class VideosAdapterViewHolder extends RecyclerView.ViewHolder {
         final ImageView mVideoThumbImageView;
         final TextView mVideoNameTextView;
         Context mContext;
@@ -47,9 +65,9 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
 
     @Override
     public VideosAdapterViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-        Context context = viewGroup.getContext();
+        mContext = viewGroup.getContext();
         int layoutIdForListItem = R.layout.videos_view;
-        LayoutInflater inflater = LayoutInflater.from(context);
+        LayoutInflater inflater = LayoutInflater.from(mContext);
         boolean shouldAttachToParentImmediately = false;
 
         View view = inflater.inflate(layoutIdForListItem, viewGroup, shouldAttachToParentImmediately);
@@ -60,16 +78,17 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
     public void onBindViewHolder(VideosAdapterViewHolder videosAdapterViewHolder, int position) {
         final Video video = mVideoList.get(position);
         Picasso.with(videosAdapterViewHolder.mContext)
-                .load(buildVideoUrl(video))
+                .load(buildVideoUrl(video.getKey()))
                 .into(videosAdapterViewHolder.mVideoThumbImageView);
         videosAdapterViewHolder.mVideoNameTextView.setText(video.getName());
 
         videosAdapterViewHolder.mVideoThumbImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent appIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + video.getKey()));
-                Intent webIntent = new Intent(Intent.ACTION_VIEW,
-                        Uri.parse("http://www.youtube.com/watch?v=" + video.getKey()));
+                Intent appIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(Resources.getSystem()
+                        .getString(R.string.movie_detail_youtube_vendor) + video.getKey()));
+                Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(Resources.getSystem()
+                        .getString(R.string.movie_detail_youtube_video_link) + video.getKey()));
                 try {
                     view.getContext().startActivity(appIntent);
                 } catch (ActivityNotFoundException ex) {
@@ -79,14 +98,20 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
         });
     }
 
-    private String buildVideoUrl(Video video) {
-        return "http://img.youtube.com/vi/" + video.getKey() + "/0.jpg";
-    }
-
     @Override
     public int getItemCount() {
         if (null == mVideoList) return 0;
         return mVideoList.size();
+    }
+
+    /**
+     * Utility method to build the Youtube Thumbnail Image from a video key
+     *
+     * @param videoKey the identification key of a video
+     * @return the url of the thumb service
+     */
+    private String buildVideoUrl(String videoKey) {
+        return mContext.getString(R.string.movie_detail_youtube_thumbnail_service).replace("#", videoKey);
     }
 
     /**
@@ -111,4 +136,5 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
     public List<Video> getVideosData() {
         return mVideoList;
     }
+
 }

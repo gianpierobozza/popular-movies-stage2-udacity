@@ -1,5 +1,21 @@
 package com.gbozza.android.popularmovies.adapters;
 
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -76,7 +92,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
     }
 
     @Override
-    public void onBindViewHolder(MoviesAdapterViewHolder moviesAdapterViewHolder, int position) {
+    public void onBindViewHolder(final MoviesAdapterViewHolder moviesAdapterViewHolder, int position) {
         Movie movie = mMovieList.get(position);
 
         Picasso.with(moviesAdapterViewHolder.mContext)
@@ -98,6 +114,12 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         });
     }
 
+    /**
+     * This method behaves like a swapCursor equivalent, we have to put the elements in the
+     * List<Movie> structure
+     *
+     * @param newCursor the cursor that we want to load into the adapter
+     */
     public void loadCursorIntoAdapter(Cursor newCursor) {
         if (null != newCursor) {
             newCursor.moveToFirst();
@@ -129,7 +151,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
      * Reset the Movie List, new search, for example
      */
     public void clearMovieList() {
-        if (mMovieList != null) {
+        if (null != mMovieList) {
             mMovieList.clear();
             notifyDataSetChanged();
         }
@@ -158,7 +180,13 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         return mMovieList;
     }
 
-    public Movie createMovieFromCursor(Cursor cursor) {
+    /**
+     * This utility method creates a Movie element from a Cursor
+     *
+     * @param cursor the cursor containing the movie data
+     * @return a Movie instance
+     */
+    private Movie createMovieFromCursor(Cursor cursor) {
         return new Movie(
                 cursor.getInt(INDEX_MOVIE_ID),
                 cursor.getString(INDEX_BACKDROP_PATH),

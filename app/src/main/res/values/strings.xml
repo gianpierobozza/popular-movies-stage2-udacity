@@ -8,15 +8,23 @@
     <string name="backdrop_image_alt">Backdrop Image</string>
     <string name="favourite_image_alt">Fav Star</string>
 
-    <string name="movie_favourite_on_toast_msg">Movie listed as Favourite!</string>
-    <string name="movie_favourite_off_toast_msg">Movie removed from Favourites...</string>
+    <string name="movie_detail_vote_average">Vote Average: </string>
+    <string name="movie_detail_release_date">Release Date: </string>
+    <string name="movie_detail_overview">Overview: </string>
+    <string name="movie_favourite_on_toast_msg">Movie set as Favourite!</string>
+    <string name="movie_favourite_off_toast_msg">Movie removed from Favourites&#8230;</string>
     <string name="movie_detail_collapse">collapse</string>
     <string name="movie_detail_see_more">see more</string>
+    <string name="movie_detail_review_by">Review by: </string>
+    <string name="movie_detail_youtube_vendor">vnd.youtube:</string>
+    <string name="movie_detail_youtube_video_link">http://www.youtube.com/watch?v=</string>
+    <string name="movie_detail_youtube_thumbnail_service">http://img.youtube.com/vi/#/0.jpg"</string>
 
     <string name="error_message">An error has occurred. Please try again by swiping down</string>
     <string name="error_no_connectivity">Your device is not connected to the Internet, please check your connection and swipe down to refresh</string>
     <string name="error_moviedb_list">Error from the MovieDB Service. Swipe down to try again</string>
     <string name="error_movie_poster">Error loading the poster, sorry!</string>
+    <string name="error_no_favourites">You have no favourite movies, use the Star icon to set a movie as favourite in the detailed movie screen.</string>
 
     <string name="pref_sorting_default">popular</string>
 

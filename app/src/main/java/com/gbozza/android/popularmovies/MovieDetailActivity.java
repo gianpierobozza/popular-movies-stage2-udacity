@@ -1,8 +1,25 @@
 package com.gbozza.android.popularmovies;
 
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,6 +35,7 @@ import android.widget.Toast;
 
 import com.gbozza.android.popularmovies.adapters.ReviewsAdapter;
 import com.gbozza.android.popularmovies.adapters.VideosAdapter;
+import com.gbozza.android.popularmovies.data.FavouriteMoviesContract.FavouriteMovieEntry;
 import com.gbozza.android.popularmovies.models.Movie;
 import com.gbozza.android.popularmovies.models.Review;
 import com.gbozza.android.popularmovies.models.Video;
@@ -31,8 +49,6 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.gbozza.android.popularmovies.data.FavouriteMoviesContract;
-
 /**
  * Activity used to display Movie details, like release date, vote average, etc..
  */
@@ -44,13 +60,12 @@ public class MovieDetailActivity extends AppCompatActivity {
     private Context mContext;
     private Movie mMovie;
 
-    private final static String LABEL_TEXT_VOTE_AVERAGE = "Vote Average: ";
-    private final static String LABEL_TEXT_RELEASE_DATE = "Release Date: ";
-    private final static String LABEL_TEXT_OVERVIEW = "Overview: ";
-
     private static final String INTENT_MOVIE_KEY = "movieObject";
     private static final String BUNDLE_VIDEOS_KEY = "videoList";
     private static final String BUNDLE_REVIEWS_KEY = "reviewList";
+
+    private static final String DETAIL_ELEMENT_VIDEOS = "videos";
+    private static final String DETAIL_ELEMENT_REVIEWS = "reviews";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -58,7 +73,7 @@ public class MovieDetailActivity extends AppCompatActivity {
         mContext = getApplicationContext();
 
         Intent parentIntent = getIntent();
-        if (parentIntent != null) {
+        if (null != parentIntent) {
             if (parentIntent.hasExtra(INTENT_MOVIE_KEY)) {
                 getSupportActionBar().setHomeButtonEnabled(true);
 
@@ -95,11 +110,14 @@ public class MovieDetailActivity extends AppCompatActivity {
                             }
                         });
 
-                movieVoteAverageTextView.append(SpannableUtilities.makeBold(LABEL_TEXT_VOTE_AVERAGE));
+                movieVoteAverageTextView.append(SpannableUtilities
+                        .makeBold(getString(R.string.movie_detail_vote_average)));
                 movieVoteAverageTextView.append(mMovie.getVoteAverage());
-                movieReleaseDateTextView.append(SpannableUtilities.makeBold(LABEL_TEXT_RELEASE_DATE));
+                movieReleaseDateTextView.append(SpannableUtilities
+                        .makeBold(getString(R.string.movie_detail_release_date)));
                 movieReleaseDateTextView.append(mMovie.getReleaseDate());
-                movieOverviewTextView.append(SpannableUtilities.makeBold(LABEL_TEXT_OVERVIEW));
+                movieOverviewTextView.append(SpannableUtilities
+                        .makeBold(getString(R.string.movie_detail_overview)));
                 movieOverviewTextView.append(mMovie.getOverview());
 
                 setTitle(mMovie.getOriginalTitle());
@@ -120,14 +138,14 @@ public class MovieDetailActivity extends AppCompatActivity {
                 mReviewsAdapter = new ReviewsAdapter();
                 reviewsRecyclerView.setAdapter(mReviewsAdapter);
 
-                if (savedInstanceState != null) {
+                if (null != savedInstanceState) {
                     ArrayList<Video> videoList = savedInstanceState.getParcelableArrayList(BUNDLE_VIDEOS_KEY);
                     mVideosAdapter.setVideosData(videoList);
                     ArrayList<Review> reviewList = savedInstanceState.getParcelableArrayList(BUNDLE_REVIEWS_KEY);
                     mReviewsAdapter.setReviewsData(reviewList);
                 } else {
-                    load("videos", mMovie.getId());
-                    load("reviews", mMovie.getId());
+                    loadElements(DETAIL_ELEMENT_VIDEOS, mMovie.getId());
+                    loadElements(DETAIL_ELEMENT_REVIEWS, mMovie.getId());
                 }
             }
         }
@@ -137,59 +155,57 @@ public class MovieDetailActivity extends AppCompatActivity {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        List<Video> videoList = mVideosAdapter.getVideosData();
-        if (videoList != null) {
-            ArrayList<Video> videoArrayList = new ArrayList<>(mVideosAdapter.getVideosData());
+        List<Video> videosList = mVideosAdapter.getVideosData();
+        if (null != videosList) {
+            ArrayList<Video> videoArrayList = new ArrayList<>(videosList);
             outState.putParcelableArrayList(BUNDLE_VIDEOS_KEY, videoArrayList);
-        } else {
-            // TODO implement video error case
         }
 
-        List<Review> reviewList = mReviewsAdapter.getReviewsData();
-        if (reviewList != null) {
-            ArrayList<Review> reviewArrayList = new ArrayList<>(mReviewsAdapter.getReviewsData());
+        List<Review> reviewsList = mReviewsAdapter.getReviewsData();
+        if (null != reviewsList) {
+            ArrayList<Review> reviewArrayList = new ArrayList<>(reviewsList);
             outState.putParcelableArrayList(BUNDLE_REVIEWS_KEY, reviewArrayList);
-        } else {
-            // TODO implement review error case
         }
     }
 
     /**
-     * A method that invokes the AsyncTask to populate the RecyclerView,
-     * it's based on the sorting option selected by the user. Default is "most popular"
+     * A method that invokes the AsyncTask to populate the details required, for example
+     * video trailer or reviews.
      *
      * @param element the element type to load
      * @param movieId the movie id for the specific videos we need
      */
-    public void load(String element, int movieId) {
+    public void loadElements(String element, int movieId) {
         if (NetworkUtilities.isOnline(mContext)) {
             String method;
             switch (element) {
-                case "videos":
+                case DETAIL_ELEMENT_VIDEOS:
                     method = NetworkUtilities.getMoviedbMethodVideos(movieId);
                     String[] videos = new String[]{method};
-                    new FetchVideosTask(mContext).execute(videos);
+                    new FetchVideosTask().execute(videos);
                     break;
-                case "reviews":
+                case DETAIL_ELEMENT_REVIEWS:
                     method = NetworkUtilities.getMoviedbMethodReviews(movieId);
                     String[] reviews = new String[]{method};
-                    new FetchReviewsTask(mContext).execute(reviews);
+                    new FetchReviewsTask().execute(reviews);
                     break;
-                default:
-                    return;
             }
-        } else {
-            // TODO implement error case
         }
     }
 
+    /**
+     * A method to check if a Movie is already or not flagged as favourite
+     *
+     * @param movieId the ID of the movie, from The MovieDB database
+     * @return true or false
+     */
     private boolean checkFavourite(int movieId) {
         boolean favourite = false;
-        String[] selectionArgs = { String.valueOf(movieId) };
-        Uri uri = FavouriteMoviesContract.FavouriteMovieEntry.buildFavouriteUriWithMovieId(movieId);
+        String[] selectionArgs = {String.valueOf(movieId)};
+        Uri uri = FavouriteMovieEntry.buildFavouriteUriWithMovieId(movieId);
         Cursor cursor = getContentResolver().query(uri,
                 null,
-                FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_MOVIE_ID + "=?",
+                FavouriteMovieEntry.COLUMN_MOVIE_ID + "=?",
                 selectionArgs,
                 null);
         if (null != cursor && cursor.getCount() != 0) {
@@ -199,10 +215,14 @@ public class MovieDetailActivity extends AppCompatActivity {
         return favourite;
     }
 
+    /**
+     * This method performs the insert or delete of a movie from the favourite database
+     * @param view the view element coming from the layout
+     */
     public void favouriteMovie(View view) {
         if (checkFavourite(mMovie.getId())) {
-            Uri unfavouriteUri = FavouriteMoviesContract.FavouriteMovieEntry.buildFavouriteUriWithMovieId(mMovie.getId());
-            getContentResolver().delete(unfavouriteUri, null, null);
+            Uri removeFavouriteUri = FavouriteMovieEntry.buildFavouriteUriWithMovieId(mMovie.getId());
+            getContentResolver().delete(removeFavouriteUri, null, null);
 
             Toast.makeText(getBaseContext(), getString(R.string.movie_favourite_off_toast_msg), Toast.LENGTH_LONG).show();
 
@@ -210,16 +230,16 @@ public class MovieDetailActivity extends AppCompatActivity {
             movieFavouriteImageView.setBackgroundResource(R.drawable.ic_star_border_black);
         } else {
             ContentValues contentValues = new ContentValues();
-            contentValues.put(FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_MOVIE_ID, mMovie.getId());
-            contentValues.put(FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_BACKDROP_PATH, mMovie.getBackdropPath());
-            contentValues.put(FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_POSTER_PATH, mMovie.getPosterPath());
-            contentValues.put(FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_OVERVIEW, mMovie.getOverview());
-            contentValues.put(FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_TITLE, mMovie.getOriginalTitle());
-            contentValues.put(FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_RELEASE_DATE, mMovie.getReleaseDate());
-            contentValues.put(FavouriteMoviesContract.FavouriteMovieEntry.COLUMN_VOTE_AVERAGE, mMovie.getVoteAverage());
-            Uri favouriteUri = getContentResolver().insert(FavouriteMoviesContract.FavouriteMovieEntry.CONTENT_URI, contentValues);
+            contentValues.put(FavouriteMovieEntry.COLUMN_MOVIE_ID, mMovie.getId());
+            contentValues.put(FavouriteMovieEntry.COLUMN_BACKDROP_PATH, mMovie.getBackdropPath());
+            contentValues.put(FavouriteMovieEntry.COLUMN_POSTER_PATH, mMovie.getPosterPath());
+            contentValues.put(FavouriteMovieEntry.COLUMN_OVERVIEW, mMovie.getOverview());
+            contentValues.put(FavouriteMovieEntry.COLUMN_TITLE, mMovie.getOriginalTitle());
+            contentValues.put(FavouriteMovieEntry.COLUMN_RELEASE_DATE, mMovie.getReleaseDate());
+            contentValues.put(FavouriteMovieEntry.COLUMN_VOTE_AVERAGE, mMovie.getVoteAverage());
+            Uri favouriteUri = getContentResolver().insert(FavouriteMovieEntry.CONTENT_URI, contentValues);
 
-            if (favouriteUri != null) {
+            if (null != favouriteUri) {
                 Toast.makeText(getBaseContext(), getString(R.string.movie_favourite_on_toast_msg), Toast.LENGTH_LONG).show();
 
                 ImageView movieFavouriteImageView = (ImageView) findViewById(R.id.iv_movie_favourite);

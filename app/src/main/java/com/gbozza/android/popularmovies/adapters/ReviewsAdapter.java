@@ -1,6 +1,23 @@
 package com.gbozza.android.popularmovies.adapters;
 
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import android.content.Context;
+import android.content.res.Resources;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,19 +36,16 @@ import java.util.List;
 public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewsAdapterViewHolder> {
 
     private List<Review> mReviewList;
-
-    final static String LABEL_TEXT_REVIEW_AUTHOR = "Review by: ";
+    private Context mContext;
 
     /**
      * Inner class to represent the ViewHolder for the Adapter
      */
-    public class ReviewsAdapterViewHolder extends RecyclerView.ViewHolder {
+    class ReviewsAdapterViewHolder extends RecyclerView.ViewHolder {
         final TextView mReviewAuthorTextView;
         final TextView mReviewContentTextView;
         final TextView mReviewSeeMoreTextView;
         final TextView mReviewCollapeTextView;
-
-        Context mContext;
 
         /**
          * Constructor to the ViewHolder class
@@ -44,15 +58,14 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewsA
             mReviewContentTextView = (TextView) view.findViewById(R.id.tv_review_content);
             mReviewSeeMoreTextView = (TextView) view.findViewById(R.id.tv_review_see_more);
             mReviewCollapeTextView = (TextView) view.findViewById(R.id.tv_review_collapse);
-            mContext = view.getContext();
         }
     }
 
     @Override
     public ReviewsAdapterViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-        Context context = viewGroup.getContext();
+        mContext = viewGroup.getContext();
         int layoutIdForListItem = R.layout.reviews_view;
-        LayoutInflater inflater = LayoutInflater.from(context);
+        LayoutInflater inflater = LayoutInflater.from(mContext);
         boolean shouldAttachToParentImmediately = false;
 
         View view = inflater.inflate(layoutIdForListItem, viewGroup, shouldAttachToParentImmediately);
@@ -62,7 +75,8 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewsA
     @Override
     public void onBindViewHolder(final ReviewsAdapterViewHolder reviewsAdapterViewHolder, int position) {
         Review review = mReviewList.get(position);
-        reviewsAdapterViewHolder.mReviewAuthorTextView.append(SpannableUtilities.makeBold(LABEL_TEXT_REVIEW_AUTHOR));
+        reviewsAdapterViewHolder.mReviewAuthorTextView.append(SpannableUtilities
+                .makeBold(mContext.getString(R.string.movie_detail_review_by)));
         reviewsAdapterViewHolder.mReviewAuthorTextView.append(review.getAuthor());
         reviewsAdapterViewHolder.mReviewContentTextView.setText(review.getContent());
         reviewsAdapterViewHolder.mReviewSeeMoreTextView.setOnClickListener(new View.OnClickListener() {
@@ -111,4 +125,5 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewsA
     public List<Review> getReviewsData() {
         return mReviewList;
     }
+
 }

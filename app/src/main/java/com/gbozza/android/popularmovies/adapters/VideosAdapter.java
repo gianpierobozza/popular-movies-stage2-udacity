@@ -85,9 +85,9 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
         videosAdapterViewHolder.mVideoThumbImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent appIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(Resources.getSystem()
+                Intent appIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(view.getContext()
                         .getString(R.string.movie_detail_youtube_vendor) + video.getKey()));
-                Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(Resources.getSystem()
+                Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(view.getContext()
                         .getString(R.string.movie_detail_youtube_video_link) + video.getKey()));
                 try {
                     view.getContext().startActivity(appIntent);

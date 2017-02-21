@@ -20,7 +20,13 @@ import android.graphics.Typeface;
 import android.text.SpannableString;
 import android.text.style.StyleSpan;
 
-public class SpannableUtilities {
+public final class SpannableUtilities {
+
+    /**
+     * Suppressed constructor to avoid errors for example in class reflection
+     */
+    private SpannableUtilities() {}
+
     /**
      *
      * @param string the text to be styled in bold

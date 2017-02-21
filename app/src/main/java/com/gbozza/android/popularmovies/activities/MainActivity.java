@@ -1,4 +1,4 @@
-package com.gbozza.android.popularmovies;
+package com.gbozza.android.popularmovies.activities;
 
 /*
  * Copyright (C) 2016 The Android Open Source Project
@@ -22,6 +22,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+
+import com.gbozza.android.popularmovies.R;
 
 /**
  * The entry point Activity of the Application

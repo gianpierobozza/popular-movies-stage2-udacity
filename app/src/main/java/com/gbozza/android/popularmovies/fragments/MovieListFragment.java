@@ -54,6 +54,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import butterknife.BindString;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 /**
  * A Class that extends Fragment to implement the Movie List structure
  */
@@ -63,10 +67,17 @@ public class MovieListFragment extends Fragment implements
 
     private Context mContext;
     private BottomRecyclerViewScrollListener mScrollListener;
-    private RecyclerView mRecyclerView;
-    private ProgressBar mLoadingIndicator;
-    private TextView mErrorMessageDisplay;
-    private SwipeRefreshLayout mSwipeContainer;
+    @BindView(R.id.rv_posters) RecyclerView mRecyclerView;
+    @BindView(R.id.pb_loading_indicator) ProgressBar mLoadingIndicator;
+    @BindView(R.id.tv_error_message_display) TextView mErrorMessageDisplay;
+    @BindView(R.id.sr_swipe_container) SwipeRefreshLayout mSwipeContainer;
+    @BindString(R.string.pref_sorting_key) String mPrefSortingKey;
+    @BindString(R.string.pref_sorting_default) String mPrefSortingDefault;
+    @BindString(R.string.pref_sorting_popular_value) String mPrefSortingPopularValue;
+    @BindString(R.string.pref_sorting_rated_value) String mPrefSortingRatedValue;
+    @BindString(R.string.pref_sorting_favourites_value) String mPrefSortingFavouritesValue;
+    @BindString(R.string.pref_locale_key) String mPrefLocaleKey;
+    @BindString(R.string.pref_locale_default) String mPrefLocaleDefault;
     private int mPage;
     private int mSorting;
     private static String mMovieLocale;
@@ -110,6 +121,7 @@ public class MovieListFragment extends Fragment implements
         }
 
         View rootView = inflater.inflate(R.layout.movie_list_fragment, container, false);
+        ButterKnife.bind(this, rootView);
         mContext = getContext();
         setupSharedPreferences();
 
@@ -122,19 +134,16 @@ public class MovieListFragment extends Fragment implements
 
         final int columns = getResources().getInteger(R.integer.grid_columns);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(mContext, columns, GridLayoutManager.VERTICAL, false);
-        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.rv_posters);
         mRecyclerView.setLayoutManager(gridLayoutManager);
 
         mRecyclerView.setHasFixedSize(true);
         mMoviesAdapter = new MoviesAdapter();
         mRecyclerView.setAdapter(mMoviesAdapter);
 
-        mLoadingIndicator = (ProgressBar) rootView.findViewById(R.id.pb_loading_indicator);
         if (mSorting != SORTING_FAVOURITES) {
             mScrollListener = new BottomRecyclerViewScrollListener(gridLayoutManager, mPage) {
                 @Override
                 public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                    Log.d(TAG, "Loading page: " + String.valueOf(page));
                     mPage = page;
                     loadCards();
                 }
@@ -142,7 +151,6 @@ public class MovieListFragment extends Fragment implements
             mRecyclerView.addOnScrollListener(mScrollListener);
         }
 
-        mSwipeContainer = (SwipeRefreshLayout) rootView.findViewById(R.id.sr_swipe_container);
         mSwipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -152,8 +160,6 @@ public class MovieListFragment extends Fragment implements
             }
         });
         mSwipeContainer.setColorSchemeResources(R.color.colorAccent);
-
-        mErrorMessageDisplay = (TextView) rootView.findViewById(R.id.tv_error_message_display);
 
         if (null != savedInstanceState && !errorShown) {
             ArrayList<Movie> movieList = savedInstanceState.getParcelableArrayList(BUNDLE_MOVIES_KEY);
@@ -184,18 +190,16 @@ public class MovieListFragment extends Fragment implements
     private void setupSharedPreferences() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 
-        String sorting = sharedPreferences.getString(getString(R.string.pref_sorting_key),
-                getResources().getString(R.string.pref_sorting_default));
-        if (sorting.equals(getString(R.string.pref_sorting_popular_value))) {
+        String sorting = sharedPreferences.getString(mPrefSortingKey, mPrefSortingDefault);
+        if (sorting.equals(mPrefSortingPopularValue)) {
             mSorting = SORTING_POPULAR;
-        } else if (sorting.equals(getString(R.string.pref_sorting_rated_value))) {
+        } else if (sorting.equals(mPrefSortingRatedValue)) {
             mSorting = SORTING_RATED;
-        } else if (sorting.equals(getString(R.string.pref_sorting_favourites_value))) {
+        } else if (sorting.equals(mPrefSortingFavouritesValue)) {
             mSorting = SORTING_FAVOURITES;
         }
 
-        mMovieLocale = sharedPreferences.getString(getString(R.string.pref_locale_key),
-                getResources().getString(R.string.pref_locale_default));
+        mMovieLocale = sharedPreferences.getString(mPrefLocaleKey, mPrefLocaleDefault);
 
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }

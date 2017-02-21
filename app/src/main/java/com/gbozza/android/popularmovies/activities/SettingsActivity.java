@@ -1,4 +1,4 @@
-package com.gbozza.android.popularmovies;
+package com.gbozza.android.popularmovies.activities;
 
 /*
  * Copyright (C) 2016 The Android Open Source Project
@@ -21,6 +21,8 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+
+import com.gbozza.android.popularmovies.R;
 
 public class SettingsActivity extends AppCompatActivity {
 

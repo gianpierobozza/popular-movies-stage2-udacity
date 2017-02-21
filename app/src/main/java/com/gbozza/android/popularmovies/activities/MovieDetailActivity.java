@@ -1,4 +1,4 @@
-package com.gbozza.android.popularmovies;
+package com.gbozza.android.popularmovies.activities;
 
 /*
  * Copyright (C) 2016 The Android Open Source Project
@@ -19,13 +19,14 @@ package com.gbozza.android.popularmovies;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -33,32 +34,59 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.gbozza.android.popularmovies.R;
 import com.gbozza.android.popularmovies.adapters.ReviewsAdapter;
 import com.gbozza.android.popularmovies.adapters.VideosAdapter;
 import com.gbozza.android.popularmovies.data.FavouriteMoviesContract.FavouriteMovieEntry;
+import com.gbozza.android.popularmovies.fragments.MovieListFragment;
 import com.gbozza.android.popularmovies.models.Movie;
 import com.gbozza.android.popularmovies.models.Review;
 import com.gbozza.android.popularmovies.models.Video;
-import com.gbozza.android.popularmovies.tasks.FetchReviewsTask;
-import com.gbozza.android.popularmovies.tasks.FetchVideosTask;
+import com.gbozza.android.popularmovies.utilities.MovieDbJsonUtilities;
 import com.gbozza.android.popularmovies.utilities.NetworkUtilities;
 import com.gbozza.android.popularmovies.utilities.SpannableUtilities;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONObject;
+
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import butterknife.BindString;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Activity used to display Movie details, like release date, vote average, etc..
  */
 public class MovieDetailActivity extends AppCompatActivity {
 
-    public static VideosAdapter mVideosAdapter;
-    public static ReviewsAdapter mReviewsAdapter;
-
     private Context mContext;
     private Movie mMovie;
+    private VideosAdapter mVideosAdapter;
+    private ReviewsAdapter mReviewsAdapter;
+
+    @BindView(R.id.iv_movie_detail_backdrop) ImageView mMovieBackdropImageView;
+    @BindView(R.id.pb_movie_detail_poster) ProgressBar mMoviePosterProgressBar;
+    @BindView(R.id.tv_movie_detail_vote_average) TextView mMovieVoteAverageTextView;
+    @BindView(R.id.tv_movie_detail_release_date) TextView mMovieReleaseDateTextView;
+    @BindView(R.id.tv_movie_detail_overview) TextView mMovieOverviewTextView;
+    @BindView(R.id.tv_movie_detail_poster_error) TextView mMoviePosterErrorTextView;
+
+    @BindView(R.id.rv_videos) RecyclerView mVideosRecyclerView;
+    @BindView(R.id.rv_reviews) RecyclerView mReviewsRecyclerView;
+    @BindView(R.id.iv_movie_favourite) ImageView mMovieFavouriteImageView;
+
+    @BindString(R.string.movie_detail_vote_average) String mDetailVoteAvgLabel;
+    @BindString(R.string.movie_detail_release_date) String mDetailReleaseDateLabel;
+    @BindString(R.string.movie_detail_overview) String mDetailOverviewLabel;
+
+    @BindString(R.string.movie_favourite_off_toast_msg) String mFavOffToastMsg;
+    @BindString(R.string.movie_favourite_on_toast_msg) String mFavOnToastMsg;
 
     private static final String INTENT_MOVIE_KEY = "movieObject";
     private static final String BUNDLE_VIDEOS_KEY = "videoList";
@@ -79,64 +107,52 @@ public class MovieDetailActivity extends AppCompatActivity {
 
                 setContentView(R.layout.activity_movie_detail);
 
-                ImageView movieBackdropImageView = (ImageView) findViewById(R.id.iv_movie_detail_backdrop);
-                final ProgressBar moviePosterProgressBar = (ProgressBar) findViewById(R.id.pb_movie_detail_poster);
-                TextView movieVoteAverageTextView = (TextView) findViewById(R.id.tv_movie_detail_vote_average);
-                TextView movieReleaseDateTextView = (TextView) findViewById(R.id.tv_movie_detail_release_date);
-                TextView movieOverviewTextView = (TextView) findViewById(R.id.tv_movie_detail_overview);
-                final TextView moviePosterErrorTextView = (TextView) findViewById(R.id.tv_movie_detail_poster_error);
+                ButterKnife.bind(this);
 
                 mMovie = getIntent().getExtras().getParcelable(INTENT_MOVIE_KEY);
 
                 if (checkFavourite(mMovie.getId())) {
-                    ImageView movieFavouriteImageView = (ImageView) findViewById(R.id.iv_movie_favourite);
-                    movieFavouriteImageView.setBackgroundResource(R.drawable.ic_star);
+                    mMovieFavouriteImageView.setBackgroundResource(R.drawable.ic_star);
                 }
 
-                Context context = getApplicationContext();
-                Picasso.with(context)
-                        .load(mMovie.buildBackdropPath(context))
-                        .into(movieBackdropImageView, new Callback() {
+                Picasso.with(this)
+                        .load(mMovie.buildBackdropPath(this))
+                        .into(mMovieBackdropImageView, new Callback() {
                             @Override
                             public void onSuccess() {
-                                moviePosterProgressBar.setVisibility(View.GONE);
+                                mMoviePosterProgressBar.setVisibility(View.GONE);
                             }
 
                             @Override
                             public void onError() {
-                                moviePosterProgressBar.setVisibility(View.GONE);
-                                moviePosterErrorTextView.setRotation(-20);
-                                moviePosterErrorTextView.setVisibility(View.VISIBLE);
+                                mMoviePosterProgressBar.setVisibility(View.GONE);
+                                mMoviePosterErrorTextView.setRotation(-20);
+                                mMoviePosterErrorTextView.setVisibility(View.VISIBLE);
                             }
                         });
 
-                movieVoteAverageTextView.append(SpannableUtilities
-                        .makeBold(getString(R.string.movie_detail_vote_average)));
-                movieVoteAverageTextView.append(mMovie.getVoteAverage());
-                movieReleaseDateTextView.append(SpannableUtilities
-                        .makeBold(getString(R.string.movie_detail_release_date)));
-                movieReleaseDateTextView.append(mMovie.getReleaseDate());
-                movieOverviewTextView.append(SpannableUtilities
-                        .makeBold(getString(R.string.movie_detail_overview)));
-                movieOverviewTextView.append(mMovie.getOverview());
+                mMovieVoteAverageTextView.append(SpannableUtilities.makeBold(mDetailVoteAvgLabel));
+                mMovieVoteAverageTextView.append(mMovie.getVoteAverage());
+                mMovieReleaseDateTextView.append(SpannableUtilities.makeBold(mDetailReleaseDateLabel));
+                mMovieReleaseDateTextView.append(mMovie.getReleaseDate());
+                mMovieOverviewTextView.append(SpannableUtilities.makeBold(mDetailOverviewLabel));
+                mMovieOverviewTextView.append(mMovie.getOverview());
 
                 setTitle(mMovie.getOriginalTitle());
 
                 LinearLayoutManager videosLinearLayoutManager = new LinearLayoutManager(mContext);
-                RecyclerView videosRecyclerView = (RecyclerView) findViewById(R.id.rv_videos);
-                videosRecyclerView.setLayoutManager(videosLinearLayoutManager);
+                mVideosRecyclerView.setLayoutManager(videosLinearLayoutManager);
 
-                videosRecyclerView.setHasFixedSize(true);
+                mVideosRecyclerView.setHasFixedSize(true);
                 mVideosAdapter = new VideosAdapter();
-                videosRecyclerView.setAdapter(mVideosAdapter);
+                mVideosRecyclerView.setAdapter(mVideosAdapter);
 
                 LinearLayoutManager reviewsLinearLayoutManager = new LinearLayoutManager(mContext);
-                RecyclerView reviewsRecyclerView = (RecyclerView) findViewById(R.id.rv_reviews);
-                reviewsRecyclerView.setLayoutManager(reviewsLinearLayoutManager);
+                mReviewsRecyclerView.setLayoutManager(reviewsLinearLayoutManager);
 
-                reviewsRecyclerView.setHasFixedSize(true);
+                mReviewsRecyclerView.setHasFixedSize(true);
                 mReviewsAdapter = new ReviewsAdapter();
-                reviewsRecyclerView.setAdapter(mReviewsAdapter);
+                mReviewsRecyclerView.setAdapter(mReviewsAdapter);
 
                 if (null != savedInstanceState) {
                     ArrayList<Video> videoList = savedInstanceState.getParcelableArrayList(BUNDLE_VIDEOS_KEY);
@@ -223,11 +239,8 @@ public class MovieDetailActivity extends AppCompatActivity {
         if (checkFavourite(mMovie.getId())) {
             Uri removeFavouriteUri = FavouriteMovieEntry.buildFavouriteUriWithMovieId(mMovie.getId());
             getContentResolver().delete(removeFavouriteUri, null, null);
-
-            Toast.makeText(getBaseContext(), getString(R.string.movie_favourite_off_toast_msg), Toast.LENGTH_LONG).show();
-
-            ImageView movieFavouriteImageView = (ImageView) findViewById(R.id.iv_movie_favourite);
-            movieFavouriteImageView.setBackgroundResource(R.drawable.ic_star_border_black);
+            Toast.makeText(getBaseContext(), mFavOffToastMsg, Toast.LENGTH_LONG).show();
+            mMovieFavouriteImageView.setBackgroundResource(R.drawable.ic_star_border_black);
         } else {
             ContentValues contentValues = new ContentValues();
             contentValues.put(FavouriteMovieEntry.COLUMN_MOVIE_ID, mMovie.getId());
@@ -240,10 +253,8 @@ public class MovieDetailActivity extends AppCompatActivity {
             Uri favouriteUri = getContentResolver().insert(FavouriteMovieEntry.CONTENT_URI, contentValues);
 
             if (null != favouriteUri) {
-                Toast.makeText(getBaseContext(), getString(R.string.movie_favourite_on_toast_msg), Toast.LENGTH_LONG).show();
-
-                ImageView movieFavouriteImageView = (ImageView) findViewById(R.id.iv_movie_favourite);
-                movieFavouriteImageView.setBackgroundResource(R.drawable.ic_star);
+                Toast.makeText(getBaseContext(), mFavOnToastMsg, Toast.LENGTH_LONG).show();
+                mMovieFavouriteImageView.setBackgroundResource(R.drawable.ic_star);
             }
         }
     }
@@ -256,6 +267,92 @@ public class MovieDetailActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * The background worker that executes the calls to the MovieDB service
+     * Using an Inner class to avoid convolution when having to manipulate the
+     * View elements in the fragment.
+     */
+    public class FetchVideosTask extends AsyncTask<String[], Void, List<Video>> {
+
+        private final String TAG = FetchVideosTask.class.getSimpleName();
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected List<Video> doInBackground(String[]... params) {
+            String method = params[0][0];
+            Map<String, String> mapping = new HashMap<>();
+
+            mapping.put(NetworkUtilities.getMoviedbLanguageQueryParam(), MovieListFragment.getMovieLocale());
+
+            URL url = NetworkUtilities.buildUrl(method, mapping);
+
+            try {
+                String response = NetworkUtilities.getResponseFromHttpUrl(url);
+                Log.d(TAG, response);
+                JSONObject responseJson = new JSONObject(response);
+
+                return MovieDbJsonUtilities.getVideosListFromJson(responseJson);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(List<Video> videoList) {
+            if (!(videoList.isEmpty())) {
+                mVideosAdapter.setVideosData(videoList);
+            }
+        }
+    }
+
+    /**
+     * The background worker that executes the calls to the MovieDB service
+     * Using an Inner class to avoid convolution when having to manipulate the
+     * View elements in the fragment.
+     */
+    public class FetchReviewsTask extends AsyncTask<String[], Void, List<Review>> {
+
+        private final String TAG = FetchReviewsTask.class.getSimpleName();
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected List<Review> doInBackground(String[]... params) {
+            String method = params[0][0];
+            Map<String, String> mapping = new HashMap<>();
+
+            mapping.put(NetworkUtilities.getMoviedbLanguageQueryParam(), MovieListFragment.getMovieLocale());
+
+            URL url = NetworkUtilities.buildUrl(method, mapping);
+
+            try {
+                String response = NetworkUtilities.getResponseFromHttpUrl(url);
+                Log.d(TAG, response);
+                JSONObject responseJson = new JSONObject(response);
+
+                return MovieDbJsonUtilities.getReviewsListFromJson(responseJson);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(List<Review> reviewList) {
+            if (!(reviewList.isEmpty())) {
+                mReviewsAdapter.setReviewsData(reviewList);
+            }
+        }
     }
 
 }

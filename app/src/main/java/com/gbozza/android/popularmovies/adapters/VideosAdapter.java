@@ -34,6 +34,10 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import butterknife.BindString;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 /**
  * Adapter to manage the Videos RecyclerView in the Movie Detail Activity
  */
@@ -41,13 +45,16 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
 
     private List<Video> mVideoList;
     private Context mContext;
+    @BindString(R.string.movie_detail_youtube_thumbnail_service) String mDetailVideoYoutubeThumb;
+    @BindString(R.string.movie_detail_youtube_vendor) String mDetailVideoYoutubeVendor;
+    @BindString(R.string.movie_detail_youtube_video_link) String mDetailVideoYoutubeVideoLink;
 
     /**
      * Inner class to represent the ViewHolder for the Adapter
      */
     class VideosAdapterViewHolder extends RecyclerView.ViewHolder {
-        final ImageView mVideoThumbImageView;
-        final TextView mVideoNameTextView;
+        @BindView(R.id.iv_video_thumbnail) ImageView mVideoThumbImageView;
+        @BindView(R.id.tv_video_name) TextView mVideoNameTextView;
         Context mContext;
 
         /**
@@ -57,9 +64,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
          */
         VideosAdapterViewHolder(View view) {
             super(view);
-            mVideoThumbImageView = (ImageView) view.findViewById(R.id.iv_video_thumbnail);
-            mVideoNameTextView = (TextView) view.findViewById(R.id.tv_video_name);
-            mContext = view.getContext();
+            ButterKnife.bind(this, view);
         }
     }
 
@@ -71,6 +76,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
         boolean shouldAttachToParentImmediately = false;
 
         View view = inflater.inflate(layoutIdForListItem, viewGroup, shouldAttachToParentImmediately);
+        ButterKnife.bind(this, view);
         return new VideosAdapterViewHolder(view);
     }
 
@@ -85,10 +91,12 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
         videosAdapterViewHolder.mVideoThumbImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent appIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(view.getContext()
-                        .getString(R.string.movie_detail_youtube_vendor) + video.getKey()));
-                Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(view.getContext()
-                        .getString(R.string.movie_detail_youtube_video_link) + video.getKey()));
+                Intent appIntent = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse(mDetailVideoYoutubeVendor + video.getKey())
+                );
+                Intent webIntent = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse(mDetailVideoYoutubeVideoLink + video.getKey())
+                );
                 try {
                     view.getContext().startActivity(appIntent);
                 } catch (ActivityNotFoundException ex) {
@@ -111,7 +119,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
      * @return the url of the thumb service
      */
     private String buildVideoUrl(String videoKey) {
-        return mContext.getString(R.string.movie_detail_youtube_thumbnail_service).replace("#", videoKey);
+        return mDetailVideoYoutubeThumb.replace("#", videoKey);
     }
 
     /**

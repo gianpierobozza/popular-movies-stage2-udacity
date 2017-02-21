@@ -28,7 +28,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.gbozza.android.popularmovies.MovieDetailActivity;
+import com.gbozza.android.popularmovies.activities.MovieDetailActivity;
 import com.gbozza.android.popularmovies.R;
 import com.gbozza.android.popularmovies.models.Movie;
 import com.gbozza.android.popularmovies.utilities.MoviePosterCallback;
@@ -36,6 +36,9 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Adapter to manage the RecyclerView in the Main Activity
@@ -57,11 +60,11 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
      * Inner class to represent the ViewHolder for the Adapter
      */
     public class MoviesAdapterViewHolder extends RecyclerView.ViewHolder {
-        final CardView mPopularMovieCardView;
-        final ImageView mMoviePosterImageView;
-        public ProgressBar mMoviePosterProgressBar;
-        public TextView mMoviePosterErrorTextView;
-        final TextView mMovieTitleTextView;
+        @BindView(R.id.cv_popular_movie) CardView mPopularMovieCardView;
+        @BindView(R.id.iv_movie_poster) ImageView mMoviePosterImageView;
+        @BindView(R.id.pb_movie_poster) public ProgressBar mMoviePosterProgressBar;
+        @BindView(R.id.tv_movie_poster_error) public TextView mMoviePosterErrorTextView;
+        @BindView(R.id.tv_movie_title) TextView mMovieTitleTextView;
         Context mContext;
 
         /**
@@ -71,11 +74,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
          */
         MoviesAdapterViewHolder(View view) {
             super(view);
-            mPopularMovieCardView = (CardView) view.findViewById(R.id.cv_popular_movie);
-            mMoviePosterImageView = (ImageView) view.findViewById(R.id.iv_movie_poster);
-            mMoviePosterProgressBar = (ProgressBar) view.findViewById(R.id.pb_movie_poster);
-            mMoviePosterErrorTextView = (TextView) view.findViewById(R.id.tv_movie_poster_error);
-            mMovieTitleTextView = (TextView) view.findViewById(R.id.tv_movie_title);
+            ButterKnife.bind(this, view);
             mContext = view.getContext();
         }
     }

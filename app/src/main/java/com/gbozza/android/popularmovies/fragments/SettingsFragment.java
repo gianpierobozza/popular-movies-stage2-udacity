@@ -26,7 +26,6 @@ import android.support.v7.preference.PreferenceScreen;
 
 import com.gbozza.android.popularmovies.R;
 
-// TODO (1) Implement OnPreferenceChangeListener
 public class SettingsFragment extends PreferenceFragmentCompat implements
         OnSharedPreferenceChangeListener, Preference.OnPreferenceChangeListener {
 

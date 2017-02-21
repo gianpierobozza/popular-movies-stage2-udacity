@@ -16,9 +16,9 @@
     <string name="movie_detail_collapse">collapse</string>
     <string name="movie_detail_see_more">see more</string>
     <string name="movie_detail_review_by">Review by: </string>
-    <string name="movie_detail_youtube_vendor">vnd.youtube:</string>
-    <string name="movie_detail_youtube_video_link">http://www.youtube.com/watch?v=</string>
-    <string name="movie_detail_youtube_thumbnail_service">http://img.youtube.com/vi/#/0.jpg"</string>
+    <string name="movie_detail_youtube_vendor" translatable="false">vnd.youtube:</string>
+    <string name="movie_detail_youtube_video_link" translatable="false">http://www.youtube.com/watch?v=</string>
+    <string name="movie_detail_youtube_thumbnail_service" translatable="false">http://img.youtube.com/vi/#/0.jpg"</string>
 
     <string name="error_message">An error has occurred. Please try again by swiping down</string>
     <string name="error_no_connectivity">Your device is not connected to the Internet, please check your connection and swipe down to refresh</string>
@@ -26,7 +26,7 @@
     <string name="error_movie_poster">Error loading the poster, sorry!</string>
     <string name="error_no_favourites">You have no favourite movies, use the Star icon to set a movie as favourite in the detailed movie screen.</string>
 
-    <string name="pref_sorting_default">popular</string>
+    <string name="pref_sorting_default" translatable="false">popular</string>
 
     <string name="pref_sorting_label">Sorting</string>
     <string name="pref_sorting_label_popular">Most Popular</string>
@@ -38,7 +38,7 @@
     <string name="pref_sorting_rated_value" translatable="false">rated</string>
     <string name="pref_sorting_favourites_value" translatable="false">favourites</string>
 
-    <string name="pref_locale_default">en-US</string>
+    <string name="pref_locale_default" translatable="false">en-US</string>
 
     <string name="pref_locale_label">Locale (TheMovieDB)</string>
     <string name="pref_locale_label_enUS">English (USA)</string>

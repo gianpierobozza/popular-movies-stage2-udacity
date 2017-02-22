@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:layout_margin="5dp"
+        android:layout_margin="3dp"
         card_view:cardCornerRadius="20dp">
 
         <RelativeLayout
@@ -50,7 +50,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/tv_movie_poster_error"
-                android:padding="10dp"
+                android:padding="5dp"
                 android:textColor="#4c4c4c"
                 android:textSize="@dimen/card_view_text_size"
                 android:textAlignment="center" />

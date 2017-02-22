@@ -19,6 +19,9 @@ package com.gbozza.android.popularmovies.adapters;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -28,15 +31,18 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.gbozza.android.popularmovies.activities.MovieDetailActivity;
 import com.gbozza.android.popularmovies.R;
+import com.gbozza.android.popularmovies.activities.MovieDetailActivity;
+import com.gbozza.android.popularmovies.fragments.MovieDetailFragment;
 import com.gbozza.android.popularmovies.models.Movie;
 import com.gbozza.android.popularmovies.utilities.MoviePosterCallback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import butterknife.BindString;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -65,17 +71,25 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         @BindView(R.id.pb_movie_poster) public ProgressBar mMoviePosterProgressBar;
         @BindView(R.id.tv_movie_poster_error) public TextView mMoviePosterErrorTextView;
         @BindView(R.id.tv_movie_title) TextView mMovieTitleTextView;
+        @BindString(R.string.selected_configuration) String mSelectedConfiguration;
+        @BindString(R.string.default_value) String mDefaultValue;
+        @BindString(R.string.large) String mLarge;
+        @BindString(R.string.large_land) String mLargeLand;
+        @BindString(R.string.xlarge) String mXlarge;
+        @BindString(R.string.xlarge_land) String mXlargeLand;
         Context mContext;
+        FragmentManager mFragmentManager;
 
         /**
          * Constructor to the ViewHolder class
          *
          * @param view the we are going to inflate
          */
-        MoviesAdapterViewHolder(View view) {
+        MoviesAdapterViewHolder(View view, FragmentManager fragmentManager) {
             super(view);
             ButterKnife.bind(this, view);
             mContext = view.getContext();
+            mFragmentManager = fragmentManager;
         }
     }
 
@@ -87,12 +101,12 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         boolean shouldAttachToParentImmediately = false;
 
         View view = inflater.inflate(layoutIdForListItem, viewGroup, shouldAttachToParentImmediately);
-        return new MoviesAdapterViewHolder(view);
+        return new MoviesAdapterViewHolder(view, ((FragmentActivity)context).getSupportFragmentManager());
     }
 
     @Override
     public void onBindViewHolder(final MoviesAdapterViewHolder moviesAdapterViewHolder, int position) {
-        Movie movie = mMovieList.get(position);
+        final Movie movie = mMovieList.get(position);
 
         Picasso.with(moviesAdapterViewHolder.mContext)
                 .load(movie.buildPosterPath(moviesAdapterViewHolder.mContext))
@@ -104,11 +118,25 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         moviesAdapterViewHolder.mPopularMovieCardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Class destinationClass = MovieDetailActivity.class;
-                Intent movieDetailIntent = new Intent(view.getContext(), destinationClass);
-                int position = (int) view.getTag(R.id.card_view_item);
-                movieDetailIntent.putExtra(INTENT_MOVIE_KEY, mMovieList.get(position));
-                view.getContext().startActivity(movieDetailIntent);
+                String[] twoPaneConfigurations = {
+                        moviesAdapterViewHolder.mLarge, moviesAdapterViewHolder.mLargeLand,
+                        moviesAdapterViewHolder.mXlarge, moviesAdapterViewHolder.mXlargeLand,
+                };
+                if (Arrays.asList(twoPaneConfigurations)
+                        .contains(moviesAdapterViewHolder.mSelectedConfiguration)) {
+                    Bundle arguments = new Bundle();
+                    arguments.putParcelable(MovieDetailFragment.PARCELABLE_MOVIE_KEY, movie);
+                    MovieDetailFragment fragment = new MovieDetailFragment();
+                    fragment.setArguments(arguments);
+                    moviesAdapterViewHolder.mFragmentManager.beginTransaction()
+                            .replace(R.id.movie_detail_container, fragment)
+                            .commit();
+                } else {
+                    Intent movieDetailIntent = new Intent(view.getContext(), MovieDetailActivity.class);
+                    int position = (int) view.getTag(R.id.card_view_item);
+                    movieDetailIntent.putExtra(INTENT_MOVIE_KEY, mMovieList.get(position));
+                    view.getContext().startActivity(movieDetailIntent);
+                }
             }
         });
     }

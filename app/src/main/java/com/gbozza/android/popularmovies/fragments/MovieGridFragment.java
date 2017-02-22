@@ -61,7 +61,7 @@ import butterknife.ButterKnife;
 /**
  * A Class that extends Fragment to implement the Movie List structure
  */
-public class MovieListFragment extends Fragment implements
+public class MovieGridFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>,
         SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -105,22 +105,15 @@ public class MovieListFragment extends Fragment implements
             FavouriteMovieEntry.COLUMN_VOTE_AVERAGE,
     };
 
-    private static final String TAG = MovieListFragment.class.getSimpleName();
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Boolean errorShown = false;
         if (null != savedInstanceState) {
             errorShown = savedInstanceState.getBoolean(BUNDLE_ERROR_KEY);
         }
 
-        View rootView = inflater.inflate(R.layout.movie_list_fragment, container, false);
+        View rootView = inflater.inflate(R.layout.movie_grid, container, false);
         ButterKnife.bind(this, rootView);
         mContext = getContext();
         setupSharedPreferences();
@@ -337,7 +330,7 @@ public class MovieListFragment extends Fragment implements
             String page = params[0][1];
             Map<String, String> mapping = new HashMap<>();
 
-            mapping.put(NetworkUtilities.getMoviedbLanguageQueryParam(), MovieListFragment.getMovieLocale());
+            mapping.put(NetworkUtilities.getMoviedbLanguageQueryParam(), MovieGridFragment.getMovieLocale());
             mapping.put(NetworkUtilities.getMoviedbPageQueryParam(), String.valueOf(page));
 
             URL url = NetworkUtilities.buildUrl(method, mapping);

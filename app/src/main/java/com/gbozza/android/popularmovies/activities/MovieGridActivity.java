@@ -28,12 +28,12 @@ import com.gbozza.android.popularmovies.R;
 /**
  * The entry point Activity of the Application
  */
-public class MainActivity extends AppCompatActivity {
+public class MovieGridActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_movie_grid);
     }
 
     @Override

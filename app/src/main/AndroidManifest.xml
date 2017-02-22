@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".activities.MainActivity">
+            android:name=".activities.MovieGridActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -22,18 +22,18 @@
         <activity
             android:name=".activities.SettingsActivity"
             android:label="@string/action_settings"
-            android:parentActivityName=".activities.MainActivity">
+            android:parentActivityName=".activities.MovieGridActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activities.MainActivity" />
+                android:value=".activities.MovieGridActivity" />
         </activity>
 
         <activity
             android:name=".activities.MovieDetailActivity"
-            android:parentActivityName=".activities.MainActivity">
+            android:parentActivityName=".activities.MovieGridActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activities.MainActivity" />
+                android:value=".activities.MovieGridActivity" />
         </activity>
 
         <provider

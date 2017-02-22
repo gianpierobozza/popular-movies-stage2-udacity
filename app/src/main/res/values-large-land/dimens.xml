@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="grid_columns">4</integer>
+    <dimen name="two_pane_left_width">300dp</dimen>
+
+    <integer name="grid_columns">2</integer>
 </resources>

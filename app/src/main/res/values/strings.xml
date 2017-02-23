@@ -17,12 +17,12 @@
 
     <string name="movie_detail_vote_average">Vote Average: </string>
     <string name="movie_detail_release_date">Release Date: </string>
-    <string name="movie_detail_overview">Overview: </string>
+    <string name="movie_detail_overview">Overview:&#160;</string>
     <string name="movie_favourite_on_toast_msg">Movie set as Favourite!</string>
     <string name="movie_favourite_off_toast_msg">Movie removed from Favourites&#8230;</string>
     <string name="movie_detail_collapse">collapse</string>
     <string name="movie_detail_see_more">see more</string>
-    <string name="movie_detail_review_by">Review by: </string>
+    <string name="movie_detail_review_by">Review by:&#160;</string>
     <string name="movie_detail_youtube_vendor" translatable="false">vnd.youtube:</string>
     <string name="movie_detail_youtube_video_link" translatable="false">http://www.youtube.com/watch?v=</string>
     <string name="movie_detail_youtube_thumbnail_service" translatable="false">http://img.youtube.com/vi/#/0.jpg"</string>

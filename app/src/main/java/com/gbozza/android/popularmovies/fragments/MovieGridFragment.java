@@ -198,9 +198,7 @@ public class MovieGridFragment extends Fragment implements
     }
 
     @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-
-    }
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {}
 
     /**
      * A method that invokes the AsyncTask to populate the RecyclerView,

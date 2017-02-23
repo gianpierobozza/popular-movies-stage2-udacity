@@ -72,13 +72,13 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         @BindView(R.id.tv_movie_poster_error) public TextView mMoviePosterErrorTextView;
         @BindView(R.id.tv_movie_title) TextView mMovieTitleTextView;
         @BindString(R.string.selected_configuration) String mSelectedConfiguration;
-        @BindString(R.string.default_value) String mDefaultValue;
         @BindString(R.string.large) String mLarge;
         @BindString(R.string.large_land) String mLargeLand;
         @BindString(R.string.xlarge) String mXlarge;
         @BindString(R.string.xlarge_land) String mXlargeLand;
         Context mContext;
         FragmentManager mFragmentManager;
+        private String[] mTwoPaneConfigurations;
 
         /**
          * Constructor to the ViewHolder class
@@ -88,8 +88,22 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         MoviesAdapterViewHolder(View view, FragmentManager fragmentManager) {
             super(view);
             ButterKnife.bind(this, view);
+            mTwoPaneConfigurations = new String[]{
+                    mLarge, mLargeLand,
+                    mXlarge, mXlargeLand,
+            };
             mContext = view.getContext();
             mFragmentManager = fragmentManager;
+        }
+
+        /**
+         * Checks if we're using a two pane layout or not
+         *
+         * @param selectedConfiguration the selected configuration string
+         * @return true or false
+         */
+        private boolean checkTwoPane(String selectedConfiguration) {
+            return Arrays.asList(mTwoPaneConfigurations).contains(selectedConfiguration);
         }
     }
 
@@ -118,12 +132,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         moviesAdapterViewHolder.mPopularMovieCardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String[] twoPaneConfigurations = {
-                        moviesAdapterViewHolder.mLarge, moviesAdapterViewHolder.mLargeLand,
-                        moviesAdapterViewHolder.mXlarge, moviesAdapterViewHolder.mXlargeLand,
-                };
-                if (Arrays.asList(twoPaneConfigurations)
-                        .contains(moviesAdapterViewHolder.mSelectedConfiguration)) {
+                if (moviesAdapterViewHolder.checkTwoPane(moviesAdapterViewHolder.mSelectedConfiguration)) {
                     Bundle arguments = new Bundle();
                     arguments.putParcelable(MovieDetailFragment.PARCELABLE_MOVIE_KEY, movie);
                     MovieDetailFragment fragment = new MovieDetailFragment();
@@ -139,6 +148,10 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
                 }
             }
         });
+
+        if (position == 0 && moviesAdapterViewHolder.checkTwoPane(moviesAdapterViewHolder.mSelectedConfiguration)) {
+            moviesAdapterViewHolder.mPopularMovieCardView.performClick();
+        }
     }
 
     /**

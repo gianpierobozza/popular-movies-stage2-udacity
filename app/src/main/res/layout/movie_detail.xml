@@ -13,15 +13,6 @@
         android:padding="10dp">
 
         <ImageView
-            android:id="@+id/iv_movie_favourite"
-            android:contentDescription="@string/favourite_image_alt"
-            android:src="@drawable/ic_star_border_black"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <ImageView
             android:id="@+id/iv_movie_detail_backdrop"
             android:contentDescription="@string/backdrop_image_alt"
             android:layout_width="match_parent"
@@ -35,12 +26,19 @@
             android:layout_below="@+id/iv_movie_detail_backdrop"
             android:layout_centerHorizontal="true" />
 
+        <ImageView
+            android:id="@+id/iv_movie_favourite"
+            android:contentDescription="@string/favourite_image_alt"
+            android:src="@drawable/ic_star_border_black"
+            android:layout_below="@+id/iv_movie_detail_backdrop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
         <TextView
             android:id="@+id/tv_movie_detail_vote_average"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/iv_movie_detail_backdrop"
-            android:paddingTop="16dp"
+            android:layout_below="@id/iv_movie_favourite"
             android:textSize="@dimen/movie_detail_text_size" />
 
         <TextView
